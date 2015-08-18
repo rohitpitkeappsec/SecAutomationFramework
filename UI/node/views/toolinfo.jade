@@ -1,0 +1,48 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra Tool Run Options
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Configure your run
+            br
+            br
+            form(action='/runtool', method='post')
+              input(type='hidden', value='#{csrf}', name='csrf')
+              table
+                each keydata in keys
+                  tr
+                    if (values[keydata].type == 'string')
+                      td  #{keydata}
+                      td  
+                        input(type='text', name='#{keydata}')
+                    if (values[keydata].type == 'option')
+                      td  #{keydata}
+                      td
+                        select(name='#{keydata}')
+                          - i = 0
+                          each opt in values[keydata].options
+                            if (values[keydata].optionValue[i] == values[keydata]['default value'])
+                              option(value='#{values[keydata].optionValue[i]}', selected='selected') #{opt}
+                            else
+                              option(value='#{values[keydata].optionValue[i]}') #{opt}
+                            - i++
+                tr          
+                  td(colspan=2)
+                    input(type='submit', value='Run')
+      // end login-form
+ 

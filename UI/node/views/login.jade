@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra-Login
+    |     
+    link(rel='stylesheet', href='css/style.css', media='screen', type='text/css')
+  body
+    .container
+      #login-form
+        h3 Login
+        |     
+        fieldset
+          form(action='/loginauth', method='post')
+            input(type='text', name='username', required='', value='Email', onblur="if(this.value=='')this.value='Email'", onfocus="if(this.value=='Email')this.value='' ")
+            // JS because of IE support; better: placeholder="User"
+            input(type='password', name='password', required='', value='Password', onblur="if(this.value=='')this.value='Password'", onfocus="if(this.value=='Password')this.value='' ")
+            // JS because of IE support; better: placeholder="Password"
+            input(type='submit', value='Login')
+            |         
+            footer.clearfix
+              p
+                span.info ?
+                a(href='#') Forgot Password
+      // end login-form

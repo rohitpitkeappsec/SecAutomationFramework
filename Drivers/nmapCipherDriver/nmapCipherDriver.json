@@ -1,0 +1,20 @@
+{
+"IP" :                                          
+  {
+    "description": "Enter IP here: ",     
+    "type" : "string",                               
+    "default value" : null, 
+     "options" : null,
+     "optionValue" : null,      
+    "commandOption": ""
+  },
+"port" :                                          
+  {
+    "description": "Enter Port here: ",     
+    "type" : "string",                               
+    "default value" : null, 
+     "options" : null,
+     "optionValue" : null,      
+    "commandOption": "-p"
+  }
+}

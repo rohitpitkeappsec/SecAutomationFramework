@@ -1,0 +1,30 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra Settings
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Settings
+            br
+            br
+            input(type='submit', value='Add User', onclick='window.location.href="/adduserui"')
+            br
+            input(type='submit', value='User Client Map', onclick='window.location.href="/userclientui"')
+            br
+            
+      // end login-form
+ 

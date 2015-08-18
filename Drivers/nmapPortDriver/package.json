@@ -1,0 +1,11 @@
+{
+  "name": "nmapPortDriver",
+  "version": "0.0.0",
+  "description": "NMAP Ports Detection Driver",
+  "main": "nmapPortDriver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "BSD-2-Clause"
+}

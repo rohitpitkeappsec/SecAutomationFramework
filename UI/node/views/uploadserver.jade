@@ -1,0 +1,36 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Upload Tool
+            br
+            br
+            form(action='/uploadtoolzip', method='post', enctype='multipart/form-data')
+              input(type='hidden', name='csrf', value='#{csrf}')
+              table 
+                tr
+                  td Enter Tool Driver File
+                  td 
+                    input(type='file', name='tooldriver', accept='application/zip')
+                tr
+                  td(colspan=2)
+                    input(type='submit', value='Upload')
+             br
+      // end login-form
+ 

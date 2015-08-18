@@ -1,0 +1,45 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra Push Tool
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Push Tool
+            br
+            br
+            form(action='/tooltoclient', method='post')
+              input(type='hidden', name='csrf', value='#{csrf}')
+              table
+                tr
+                  td Select Client
+                  td
+                    select(name='clientid')
+                      each client in clientid
+                        option(value='#{client}') #{client}
+                tr
+                  td Select Tool
+                  td
+                    select(name='toolid')
+                      each tool in toollist
+                        //#{tool}
+                        option(value='#{tool.toolID}') #{tool.toolName}
+                tr
+                  td(colspan=2)
+                    input(type='submit', value='Push Tool')
+             br
+      // end login-form
+ 

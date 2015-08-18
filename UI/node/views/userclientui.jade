@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Select User and Client
+            br
+            br
+            form(action='/userclientmap', method='post')
+              input(type='hidden', name='csrf', value='#{csrf}')
+              table
+                tr
+                  td User ID
+                  td
+                    select(name='userid')
+                      each user in userid
+                        option(value='#{user}') #{user}
+                tr
+                  td Client
+                  td
+                    select(name='clientid')
+                      each client in clientid
+                        option(value='#{client}') #{client}
+                tr
+                  td(colspan=2)
+                    input(type='submit', value='Map User and Client')
+             br
+      // end login-form
+ 

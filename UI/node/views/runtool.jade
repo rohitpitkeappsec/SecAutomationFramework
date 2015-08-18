@@ -1,0 +1,24 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra Scan Submit
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Scan ID #{scanid}
+            
+      // end login-form
+ 

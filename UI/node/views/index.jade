@@ -1,0 +1,28 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout 
+        |     
+        fieldset
+          center
+            span Client List
+            br
+            br
+            each item in dataclient
+             a(href="/gettools/" + item) #{item}
+             br
+      // end login-form
+ 

@@ -1,0 +1,30 @@
+{
+
+"URL" :                                          
+  {
+    "description": "Enter URL here: ",     
+    "type" : "string",                               
+    "default value" : null, 
+     "options" : null,
+     "optionValue" : null,      
+    "commandOption": "-u"
+  },
+"Verbose" :                                          
+  {
+    "description": "Enter URL here: ",     
+    "type" : "option",                               
+    "default value" : "1", 
+     "options" : ["0","1","2","3","4","5","6"],
+     "optionValue" : ["0","1","2","3","4","5","6"],      
+    "commandOption": "-v"
+  },
+"All" :                                          
+  {
+    "description": "Retrieve Everything",     
+    "type" : "option",                               
+    "default value" : "off", 
+     "options" : ["On", "Off"],
+     "optionValue" : ["on", "off"],      
+    "commandOption": "-a"
+  }
+}

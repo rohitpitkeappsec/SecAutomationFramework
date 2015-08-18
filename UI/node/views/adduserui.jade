@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3 
+          a(href="/home/") Home 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span User Details
+            br
+            br
+            form(action='/adduser', method='post')
+              input(type='hidden', name='csrf', value='#{csrf}')
+              table
+                tr
+                  td User ID
+                  td 
+                    input(type='text', name='userid')
+                tr
+                  td Password
+                  td 
+                    input(type='password', name='password')
+                tr
+                  td Email
+                  td 
+                    input(type='text', name='email')
+                tr
+                  td(colspan=2)
+                    input(type='submit', value='Add User')
+             br
+      // end login-form
+ 

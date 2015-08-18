@@ -1,0 +1,11 @@
+{
+  "name": "sqlMapDriver",
+  "version": "0.0.0",
+  "description": "security tool integration sqlMap driver module",
+  "main": "sqlMapDriver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tushar Patil",
+  "license": "GPL"
+}
