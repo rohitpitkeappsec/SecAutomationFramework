@@ -21,11 +21,12 @@ var server = process.argv[2];
 var serverPort = process.argv[3];
 var clientPort = process.argv[4];
 var Clientdata;
+var upload = multer({ dest: './node_modules/'});
 
 app.set('port', process.env.PORT || clientPort);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(multer({ dest: './node_modules/'}))
+//app.use(multer({ dest: './node_modules/'}))
 
 /*
  * REST API
@@ -129,7 +130,7 @@ app.post("/tool/:action/:toolID/:scanID/:sessionID", function (req, res) {
  * POST
  * URL to add and configure new tool on client machine
  */
-app.post('/toolconfig/addtool/:toolID/:toolName/:toolNPM/:sessionID', function (req, res) {
+app.post('/toolconfig/addtool/:toolID/:toolName/:toolNPM/:sessionID', upload.single('module'),function (req, res) {
     var toolID = req.params.toolID;
     var toolName = req.params.toolName;
     var toolNPM = req.params.toolNPM;
@@ -143,15 +144,15 @@ app.post('/toolconfig/addtool/:toolID/:toolName/:toolNPM/:sessionID', function (
         };
         console.log(JSON.stringify(toolData));
 
-        fs.readFile(req.files.module.path, function (err, data) {
-            var newPath = __dirname + "/" + req.files.module.originalname;
+        fs.readFile(req.file.path, function (err, data) {
+            var newPath = __dirname + "/" + req.file.originalname;
             fs.writeFile(newPath, data, function (err) {
                 if (err) throw err;
                 var zip = new AdmZip(newPath);
                 zip.extractAllTo( /*target path*/ "./node_modules/", /*overwrite*/ true);
                 mongoDB.addToolinfo(toolData, function (status) {
                     if (status == "ok") {
-                        fs.unlink(req.files.module.path, function(err){
+                        fs.unlink(req.file.path, function(err){
 			  if (err){
 			    console.log("error removing file");
                             res.status(404).send("error in action");

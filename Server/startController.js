@@ -12,9 +12,10 @@ var express = require('express');
 var Admzip = require('adm-zip');
 var bodyParser = require('body-parser');
 var db = require('./dbUtility.js');
-var multer  = require('multer');
+var multer = require('multer');
 var session = require('express-session');
-var jwt    = require('jsonwebtoken');
+var jwt = require('jsonwebtoken');
+var upload = multer({ dest: './tools/'});
 
 var scanID = 0;
 var app = express();
@@ -23,7 +24,7 @@ app.set('port', process.env.PORT || 4040);
 //app.use(bodyParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(multer({ dest: './tools/'}))
+//app.use(multer({ dest: './tools/'}))
 
 app.use(session({
   secret: 'gfty656rur67rbui7rcerwyi7',
@@ -420,15 +421,16 @@ app.get('/getactiveclient/:clientID', function (req, res) {
  * POST
  * URL to upload plugin to server.
  */
-app.post('/admin/uploadtoolserver/', function (req, res) {
-    if (req.files.filename.originalname == '') {
+app.post('/admin/uploadtoolserver/', upload.single('filename'), function (req, res) {
+    if (req.file.filename.originalname == '') {
       console.log("No ZIP to upload");
       res.status(404).send({
         "status": "Fail"
       });
     } else {
-        fs.readFile(req.files.filename.path, function (err, data) {
-            var filename = req.files.filename.originalname.split("/");
+        console.log(req.file);
+        fs.readFile(req.file.path, function (err, data) {
+            var filename = req.file.originalname.split("/");
             var newPath = __dirname + "/tools/" + filename[filename.length - 1];
 	    var toolData = {
               "toolID": filename[filename.length - 1].split(".")[0],
@@ -447,7 +449,7 @@ app.post('/admin/uploadtoolserver/', function (req, res) {
                   toolData.version = packageJSONData.version;
                   db.addToolInfo(toolData, function (status) {
                     if (status == "ok") {
-                      fs.unlink(req.files.filename.path, function(err){
+                      fs.unlink(req.file.path, function(err){
                         if (err){
                             console.log("error removing file");
                             res.status(404).send({

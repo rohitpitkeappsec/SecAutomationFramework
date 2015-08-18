@@ -382,6 +382,7 @@ app.post('/uploadtoolzip', function(req, res){
             fs.unlink(req.files.tooldriver.path);
             res.render('uploadstatus.jade', {csrf: req.session.csrfCookie});
           } else {
+	    console.log("Error uploading");
             res.status(404).send({
               "status": "Fail"
             });
