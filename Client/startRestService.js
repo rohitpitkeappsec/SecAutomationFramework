@@ -1,7 +1,6 @@
 /*
  * This file is the main file on client machine. This communicates to server
  * using REST APIs. Detailed documentation is given in ReadMe
- * Author: Gaurav Pawaskar
  */
 var express = require('express'),
     http = require('http'),

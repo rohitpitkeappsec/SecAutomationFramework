@@ -2,7 +2,6 @@
  * This is main server file. Containing all the external as well as
  * Client-server communication APIs.
  * Detailed documentation of each REST API is given in ReadMe
- * Author: Gaurav Pawaskar
  */
 var FormData = require('form-data');
 var fs = require('fs');
@@ -428,7 +427,6 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function (req, r
         "status": "Fail"
       });
     } else {
-        console.log(req.file);
         fs.readFile(req.file.path, function (err, data) {
             var filename = req.file.originalname.split("/");
             var newPath = __dirname + "/tools/" + filename[filename.length - 1];
