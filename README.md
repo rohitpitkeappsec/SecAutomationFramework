@@ -1,2 +1,3 @@
-# SecAutomationFramework
-Automation for security 
+We are aiming to build client-server based security automation framework. Our idea is simple and revolves around utilizing open source security tools for scaling security. Server component of our project is exposed via REST APIs and single point of entry for security operations. Client represents distinct machines with loaded tools. Client exposes its API to server. From server component, you can trigger scan on client and get back your result. Server can be hooked in Jenkins for continuous security testing. 
+Addition of any tool is curtailed to writing a few lines of JS code. Basically, you need to tell how to run your tool. Integrating that tool and then running it is framework's job. 
+We are actively working in the project and will be showing demo in AppSec 2015. 
