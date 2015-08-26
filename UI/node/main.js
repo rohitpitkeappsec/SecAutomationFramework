@@ -12,6 +12,8 @@ var FormData = require('form-data');
 var crypto = require('crypto');
 
 var app = express();
+
+
 app.use(bodyParser.urlencoded({
   extended: true
 }));
@@ -22,15 +24,22 @@ app.use(session({
   resave: true
 }));
 app.use(bodyParser.json());
-app.set('port', process.env.PORT || 80)
+app.set('port', process.env.PORT||80 )
 app.set('views'.__dirname + '/views');
 app.set('view engine', 'jade');
-app.use(multer({
-  dest: './temptools/',
-  rename: function(fieldname, filename, req, res) {
-    return filename;
+
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './temptools/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname )
   }
-}));
+})
+ 
+var upload = multer({ storage: storage });
+
 
 var getRandomNumber = function(size, callback) {
   crypto.pseudoRandomBytes(size, function(error, data) {
@@ -381,7 +390,7 @@ app.get('/uploadtoserver', function(req, res) {
   }
 });
 
-app.post('/uploadtoolzip', function(req, res) {
+app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
   if (req.session.userAuth == true) {
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
@@ -395,9 +404,10 @@ app.post('/uploadtoolzip', function(req, res) {
     }
     if (csrfBodyToken == csrfCookie) {
       var form = new FormData();
-      if (req.files.tooldriver != undefined) {
-        var toolID = JSON.stringify(req.files.tooldriver.name).split("\"")[1].split(".zip");
-        form.append('filename', fs.createReadStream(req.files.tooldriver.path));
+      console.log(req.file);
+      if (req.file != undefined) {
+        var toolID = req.file.originalname;
+        form.append('filename', fs.createReadStream(req.file.path));
         var request = http.request({
           method: 'POST',
           host: "localhost",
@@ -405,11 +415,12 @@ app.post('/uploadtoolzip', function(req, res) {
           path: "/admin/uploadtoolserver/",
           headers: form.getHeaders()
         });
+      //  console.log(form.filename);
         form.pipe(request);
         request.on('response', function(resEngine) {
           console.log(resEngine.statusCode);
           if (resEngine.statusCode == "200") {
-            fs.unlink(req.files.tooldriver.path);
+            fs.unlink(req.file.path);
             res.render('uploadstatus.jade', {
               csrf: req.session.csrfCookie
             });
