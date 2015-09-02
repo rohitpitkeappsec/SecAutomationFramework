@@ -612,6 +612,7 @@ app.get('/userclientui', function(req, res) {
           } else if (userBody == "error") {
             res.send("Some error occured on client");
           } else {
+            console.log(userBody);
             var userList = JSON.parse(userBody).userList;
             res.render("userclientui.jade", {
               clientid: clientList,
@@ -643,6 +644,11 @@ app.post('/userclientmap', function(req, res) {
       var clients = req.session.userClients;
       clients.push(parseInt(req.body.clientid));
       //console.log(clients);
+      for(var i=0; i<clients.length; i++){
+        if(clients[i] == 'No Clients'){
+          clients.splice(i, 1);
+        }
+      }
       var body = {
         "username": req.body.userid,
         "clientID": clients

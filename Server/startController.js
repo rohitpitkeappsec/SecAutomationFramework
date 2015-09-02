@@ -174,7 +174,7 @@ apiRoutes.use(function(req, res, next) {
     });
   }
 });
-app.use(apiRoutes);
+//app.use(apiRoutes);
 
 /*
  * REST API
@@ -688,6 +688,25 @@ app.get('/getclientidfortoolid/:toolID', function(req, res) {
       res.send("No information Available");
     } else {
       res.send(toolInfoData);
+    }
+  });
+});
+
+/*
+ * REST API
+ * GET
+ * Get all users
+ */
+app.get('/getallusers', function(req, res) {
+  db.getUsers(function(users) {
+    var usersNames = {"userList":[]}
+    if (users == false) {
+      res.send("No information Available");
+    } else {
+      for(var i=0; i<users.length; i++){
+        usersNames.userList.push(users[i].username);
+      }
+      res.send(usersNames);
     }
   });
 });

@@ -11,28 +11,27 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var path = require('path');
 var db = require('./dbUtility.js');
+var upload = multer();
 
 var app = express();
 
 app.set('port', process.env.PORT || 9090);
-app.use(multer({
-  dest: './tools/'
-}));
+
 app.use(bodyParser.json());
 
 /*
  * This API is to upload latest version of the tool
  * to update server. API expects .zip file with form-data
  */
-app.post('/uploadtool', function(req, res) {
-  fs.readFile(req.files.filename.path, function(err, data) {
-    var filename = req.files.filename.originalname.split("/");
+app.post('/uploadtool', upload.single('filename'), function(req, res) {
+  fs.readFile(req.file.path, function(err, data) {
+    var filename = req.file.originalname.split("/");
     var newPath = __dirname + "/tools/" + filename[filename.length - 1];
     fs.writeFile(newPath, data, function(err) {
       if (err) throw err;
       var zip = new Admzip(newPath);
       zip.extractAllTo( /*target path*/ "./tools/", /*overwrite*/ true);
-      fs.unlink(req.files.filename.path, function(err) {
+      fs.unlink(req.file.path, function(err) {
         if (err) {
           console.log("error removing file");
           res.status(404).send({
