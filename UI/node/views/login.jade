@@ -13,7 +13,7 @@ html
         |     
         fieldset
           form(action='/loginauth', method='post')
-            input(type='text', name='username', required='', value='Email', onblur="if(this.value=='')this.value='Email'", onfocus="if(this.value=='Email')this.value='' ")
+            input(type='text', name='username', required='', value='Username', onblur="if(this.value=='')this.value='Email'", onfocus="if(this.value=='Email')this.value='' ")
             // JS because of IE support; better: placeholder="User"
             input(type='password', name='password', required='', value='Password', onblur="if(this.value=='')this.value='Password'", onfocus="if(this.value=='Password')this.value='' ")
             // JS because of IE support; better: placeholder="Password"
