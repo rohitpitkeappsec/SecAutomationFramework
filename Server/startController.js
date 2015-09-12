@@ -140,6 +140,7 @@ app.get("/register/:clientPort/:clientID", function(req, res) {
     id = clientID;
   }
   console.log(id);
+  id = id.toString();
   db.insertClientIDIntoDB(id, clientIP, clientPort, function() {
     res.json({
       "clientID": id
