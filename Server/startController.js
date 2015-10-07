@@ -11,6 +11,7 @@ var express = require('express');
 var Admzip = require('adm-zip');
 var bodyParser = require('body-parser');
 var db = require('./dbUtility.js');
+var config = require('./config.json');
 var multer = require('multer');
 var session = require('express-session');
 var jwt = require('jsonwebtoken');
@@ -19,9 +20,11 @@ var upload = multer({
 });
 
 var scanID = 0;
+var updateServerInfo = '';
 var app = express();
+console.log(config.port);
 
-app.set('port', process.env.PORT || 4040);
+app.set('port', config.port);
 //app.use(bodyParser());
 app.use(bodyParser.urlencoded({
   extended: false
@@ -743,7 +746,7 @@ function changeClientStatus() {
  * drivers from update server to this server
  */
 function downloadAndUpdate(toolID, version) {
-  var request = http.get("http://localhost:9090/getdriver/" + toolID, function(response) {
+  var request = http.get("http://"+updateServerInfo.serverIP+":"+updateServerInfo.serverPort+"/getdriver/" + toolID, function(response) {
     if (response.statusCode === 200) {
       var file = fs.createWriteStream(__dirname + "/tools/" + toolID + ".zip");
       response.pipe(file);
@@ -776,11 +779,11 @@ function updateServerDrivers() {
     if (err) {
       console.log('enable to read file for update server configuration')
     } else {
-      var serverInfo = JSON.parse(data);
+      updateServerInfo = JSON.parse(data);
       db.getAllToolsVersion(function(currentToolsVersion) {
         var options = {
-          host: serverInfo.serverIP,
-          port: serverInfo.serverPort,
+          host: updateServerInfo.serverIP,
+          port: updateServerInfo.serverPort,
           path: '/getversion',
           method: 'GET',
           headers: {
