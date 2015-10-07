@@ -11,11 +11,12 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var path = require('path');
 var db = require('./dbUtility.js');
+var config = require('./config.json');
 var upload = multer();
 
 var app = express();
 
-app.set('port', process.env.PORT || 9090);
+app.set('port', config.port);
 
 app.use(bodyParser.json());
 
@@ -94,5 +95,5 @@ app.get('/getdriver/:toolID', function(req, res) {
 });
 
 http.createServer(app).listen(app.get('port'), function() {
-  console.log('server started on 9090');
+  console.log('server started on '+config.port);
 });
