@@ -5,8 +5,9 @@
  * every function has closure written.
  */
 var mongo = require("mongodb");
-var host = "127.0.0.1";
-var port = 27017;
+var config = require("./config.json");
+var host = config.mongoIP;
+var port = config.mongoPort;
 //var port = mongo.Connection.DEFAULT_PORT;
 var dbUse = 0;
 

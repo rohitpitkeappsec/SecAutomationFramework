@@ -10,6 +10,7 @@ var htmlToPdf = require('html-to-pdf');
 var multer = require('multer');
 var FormData = require('form-data');
 var crypto = require('crypto');
+var config = require('./config.json');
 
 var app = express();
 
@@ -24,7 +25,7 @@ app.use(session({
   resave: true
 }));
 app.use(bodyParser.json());
-app.set('port', process.env.PORT||80 )
+app.set('port', config.port )
 app.set('views'.__dirname + '/views');
 app.set('view engine', 'jade');
 
@@ -681,5 +682,5 @@ app.post('/userclientmap', function(req, res) {
 });
 
 http.createServer(app).listen(app.get('port'), function(req, res) {
-  console.log('Listing to port 80');
+  console.log('Listing to port '+config.port);
 });
