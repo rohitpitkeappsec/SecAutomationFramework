@@ -833,7 +833,7 @@ function updateServerDrivers() {
           //res.send("error");
         });
         request.end();
-        setTimeout(updateServerDrivers, 30000);
+        setTimeout(updateServerDrivers, config.updateTimeout);
       });
     }
   });

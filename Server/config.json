@@ -1,5 +1,6 @@
 {
     "port" : "4040",
     "mongoIP" : "127.0.0.1",
-    "mongoPort" : "27017"
+    "mongoPort" : "27017",
+    "updateTimeout" : "30000"
 }
