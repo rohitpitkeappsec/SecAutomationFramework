@@ -438,35 +438,42 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
       };
       fs.writeFile(newPath, data, function(err) {
         if (err) throw err;
-        var zip = new Admzip(newPath);
-        zip.extractAllTo( /*target path*/ "./tools/", /*overwrite*/ true);
-        var packageFile = __dirname + "/tools/" + filename[filename.length - 1].split(".")[0] + "/package.json";
-        fs.readFile(packageFile, 'utf8', function(err, data) {
-          packageJSONData = JSON.parse(data);
-          console.log(packageJSONData.version);
-          toolData.version = packageJSONData.version;
-          db.addToolInfo(toolData, function(status) {
-            if (status == "ok") {
-              fs.unlink(req.file.path, function(err) {
-                if (err) {
-                  console.log("error removing file");
-                  res.status(404).send({
-                    "status": "Fail"
-                  });
-                } else {
-                  res.status(200).send({
-                    "status": "Success"
-                  });
-                }
-              });
-            } else {
-              console.log("error inserting in db");
-              res.status(404).send({
-                "status": "Fail"
-              });
-            }
+        try {
+          var zip = new Admzip(newPath);
+          zip.extractAllTo( /*target path*/ "./tools/", /*overwrite*/ true);
+          var packageFile = __dirname + "/tools/" + filename[filename.length - 1].split(".")[0] + "/package.json";
+          fs.readFile(packageFile, 'utf8', function(err, data) {
+            packageJSONData = JSON.parse(data);
+            console.log(packageJSONData.version);
+            toolData.version = packageJSONData.version;
+            db.addToolInfo(toolData, function(status) {
+              if (status == "ok") {
+                fs.unlink(req.file.path, function(err) {
+                  if (err) {
+                    console.log("error removing file");
+                    res.status(404).send({
+                      "status": "Fail"
+                    });
+                  } else {
+                    res.status(200).send({
+                      "status": "Success"
+                    });
+                  }
+                });
+              } else {
+                console.log("error inserting in db");
+                res.status(404).send({
+                  "status": "Fail"
+                });
+              }
+            });
           });
-        });
+        } catch (ex){
+          console.log("error extracting file");
+          res.status(404).send({
+            "status": "Fail"
+          });
+        }
       });
     });
   }
@@ -501,15 +508,24 @@ app.post('/admin/userclientmap/', function(req, res) {
  * Add new user
  */
 app.post('/admin/adduser/', function(req, res) {
-  userData = req.body
-  db.addUserInDB(userData, function(status) {
-    if (status == "ok") {
-      console.log("User entered");
-      res.send({
-        "status": "Success"
-      });
+  userData = req.body;
+  db.isUser(userData.username, function(status){
+    if(status == false){
+        db.addUserInDB(userData, function(status) {
+          if (status == "ok") {
+            console.log("User entered");
+            res.send({
+              "status": "Success"
+            });
+          } else {
+            console.log("error inserting in db");
+            res.status(404).send({
+              "status": "Fail"
+            });
+          }
+        });
     } else {
-      console.log("error inserting in db");
+      console.log("user exists");
       res.status(404).send({
         "status": "Fail"
       });

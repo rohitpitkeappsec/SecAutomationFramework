@@ -1,4 +1,6 @@
 {
-    "port" : "80"
+    "port" : "80",
+    "serverIP" : "localhost",
+    "serverPort" : "4040"
 }
 

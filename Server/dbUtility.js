@@ -948,6 +948,34 @@ var closuregetAttackList = function(callback, db) {
   });
 }
 
+/*
+ * used by /adduser/
+ */
+var isUser = function(username, callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closureisUser(username, callback, db);
+  });
+}
+
+var closureisUser = function(username, callback, db) {
+  db.collection("credentials", function(error, collection) {
+    collection.find({"username":username}, function(error, cursor) {
+      cursor.toArray(function(errorarray, data) {
+        if (data[0] == undefined) {
+          db.close();
+          callback(false);
+        } else {
+          db.close();
+          callback(true);
+        }
+      });
+    });
+  });
+}
+
 exports.performHeartBeat = performHeartBeat;
 exports.insertClientIDIntoDB = insertClientIDIntoDB;
 exports.getclientStatusData = getclientStatusData;
@@ -977,3 +1005,4 @@ exports.getClinetIDForTool = getClinetIDForTool;
 exports.getUsers = getUsers;
 exports.getAllToolsVersion = getAllToolsVersion;
 exports.updateToolVersion = updateToolVersion;
+exports.isUser = isUser;

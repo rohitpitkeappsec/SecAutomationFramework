@@ -78,7 +78,7 @@ app.post('/loginauth', function(req, res) {
     'Content-Type': 'application/json'
   }
   var options = {
-    url: "http://localhost:4040/authenticate/",
+    url: "http://"+config.serverIP+":"+config.serverPort+"/authenticate/",
     headers: headers,
     method: "POST",
     form: {
@@ -123,7 +123,7 @@ app.post('/loginauth', function(req, res) {
 app.get('/home/', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://localhost:4040/getclients/" + req.session.userName,
+      url: "http://"+config.serverIP+":"+config.serverPort+"/getclients/" + req.session.userName,
       method: "GET",
     }
 
@@ -179,7 +179,7 @@ app.get('/logout/:csrf', function(req, res) {
 app.get('/gettools/:clientid', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://localhost:4040/getallclienttools/" + req.params.clientid,
+      url: "http://"+config.serverIP+":"+config.serverPort+"/getallclienttools/" + req.params.clientid,
       method: "GET",
     }
     request(options, function(error, response, body) {
@@ -207,7 +207,7 @@ app.get('/gettoolinfo/:clientid/:toolid', function(req, res) {
   if (req.session.userAuth == true) {
     console.log(req.params.clientid);
     var options = {
-      url: "http://localhost:4040/gettoolinfo/" + req.params.clientid + "/" + req.params.toolid,
+      url: "http://"+config.serverIP+":"+config.serverPort+"/gettoolinfo/" + req.params.clientid + "/" + req.params.toolid,
       method: "GET",
     }
     request(options, function(error, response, body) {
@@ -260,7 +260,7 @@ app.post('/runtool', function(req, res) {
         'Content-Type': 'application/json'
       }
       var options = {
-        url: "http://localhost:4040/runtool/" + req.session.currentClient + "/" + req.session.currentTool,
+        url: "http://"+config.serverIP+":"+config.serverPort+"/runtool/" + req.session.currentClient + "/" + req.session.currentTool,
         headers: headers,
         method: "POST",
         body: JSON.stringify(runBody)
@@ -313,7 +313,7 @@ app.post('/getreport', function(req, res) {
       console.log(req.body.scanid);
       if (req.body.scanid != "") {
         var options = {
-          url: "http://localhost:4040/getreport/" + req.body.scanid,
+          url: "http://"+config.serverIP+":"+config.serverPort+"/getreport/" + req.body.scanid,
           method: "GET"
         }
         request(options, function(error, response, body) {
@@ -411,8 +411,8 @@ app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
         form.append('filename', fs.createReadStream(req.file.path));
         var request = http.request({
           method: 'POST',
-          host: "localhost",
-          port: 4040,
+          host: config.serverIP,
+          port: config.serverPort,
           path: "/admin/uploadtoolserver/",
           headers: form.getHeaders()
         });
@@ -450,7 +450,7 @@ app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
 app.get('/pushtoclient', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://localhost:4040/admin/getallservertoolinfo/",
+      url: "http://"+config.serverIP+":"+config.serverPort+"/admin/getallservertoolinfo/",
       method: "GET"
     }
     request(options, function(error, response, body) {
@@ -496,7 +496,7 @@ app.post('/tooltoclient', function(req, res) {
         'Content-Type': 'application/json'
       }
       var options = {
-        url: "http://localhost:4040/admin/pushtoolclient/",
+        url: "http://"+config.serverIP+":"+config.serverPort+"/admin/pushtoolclient/",
         headers: headers,
         method: "POST",
         body: JSON.stringify(body)
@@ -564,7 +564,7 @@ app.post('/adduser', function(req, res) {
         'Content-Type': 'application/json'
       }
       var options = {
-        url: "http://localhost:4040/admin/adduser/",
+        url: "http://"+config.serverIP+":"+config.serverPort+"/admin/adduser/",
         headers: headers,
         method: "POST",
         body: JSON.stringify(body)
@@ -573,6 +573,8 @@ app.post('/adduser', function(req, res) {
         if (error) {
           console.log(error);
           res.send("Some error occured");
+        } if (JSON.parse(body).status=="Fail"){
+          res.send("user exists");
         } else {
           res.render("adduserstatus.jade", {
             csrf: req.session.csrfCookie
@@ -590,7 +592,7 @@ app.post('/adduser', function(req, res) {
 app.get('/userclientui', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://localhost:4040/admin/getallclients/",
+      url: "http://"+config.serverIP+":"+config.serverPort+"/admin/getallclients/",
       method: "GET"
     }
     request(options, function(error, response, body) {
@@ -603,7 +605,7 @@ app.get('/userclientui', function(req, res) {
         //console.log(body);
         var clientList = JSON.parse(body).clientID;
         var userOpt = {
-          url: "http://localhost:4040/getallusers",
+          url: "http://"+config.serverIP+":"+config.serverPort+"/getallusers",
           method: "GET"
         }
         request(userOpt, function(error, userRes, userBody) {
@@ -658,7 +660,7 @@ app.post('/userclientmap', function(req, res) {
         'Content-Type': 'application/json'
       }
       var options = {
-        url: "http://localhost:4040/admin/userclientmap/",
+        url: "http://"+config.serverIP+":"+config.serverPort+"/admin/userclientmap/",
         headers: headers,
         method: "POST",
         body: JSON.stringify(body)
