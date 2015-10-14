@@ -427,6 +427,7 @@ app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
             });
           } else {
             console.log("Error uploading");
+            fs.unlink(req.file.path);
             res.status(404).send({
               "status": "Fail"
             });
@@ -434,6 +435,7 @@ app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
         });
         request.on('error', function(e) {
           console.log('problem with request: ' + e.message);
+          fs.unlink(req.file.path);
           res.send("Some error occured");
         });
       } else {

@@ -462,6 +462,8 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
                 });
               } else {
                 console.log("error inserting in db");
+                fs.unlink(req.file.path);
+                fs.unlink(__dirname + "/tools/" + req.file.originalname);
                 res.status(404).send({
                   "status": "Fail"
                 });
@@ -470,6 +472,8 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
           });
         } catch (ex){
           console.log("error extracting file");
+          fs.unlink(req.file.path);
+          fs.unlink(__dirname + "/tools/" + req.file.originalname);
           res.status(404).send({
             "status": "Fail"
           });
