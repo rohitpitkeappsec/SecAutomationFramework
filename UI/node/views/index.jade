@@ -22,7 +22,10 @@ html
             br
             br
             each item in dataclient
-             a(href="/gettools/" + item) #{item}
+             if item == "No Clients"
+              | No Clients
+             else
+               a(href="/gettools/" + item) #{item}
              br
       // end login-form
  
