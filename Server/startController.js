@@ -491,19 +491,34 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
 app.post('/admin/userclientmap/', function(req, res) {
   userName = req.body.username;
   clientID = req.body.clientID;
-  db.addClientUserMapping(userName, clientID, function(status) {
-    if (status == "ok") {
-      console.log("Db entered");
-      res.send({
-        "status": "Success"
-      });
-    } else {
-      console.log("error inserting in db");
-      res.status(404).send({
-        "status": "Fail"
-      });
+  var duplicate = false;
+  for(var i=0; i< clientID.length-1; i++) {
+    for (var j=i+1; j<clientID.length; j++) {
+      if(clientID[i]==clientID[j]) {
+        duplicate = true;
+      }
     }
-  });
+  }
+  if (duplicate == false) {
+    db.addClientUserMapping(userName, clientID, function(status) {
+      if (status == "ok") {
+        console.log("Db entered");
+        res.send({
+          "status": "Success"
+        });
+      } else {
+        console.log("error inserting in db");
+        res.status(404).send({
+          "status": "Fail"
+        });
+      }
+    });
+  } else {
+    console.log("error inserting in db");
+      res.status(404).send({
+        "status": "Duplicate"
+    });
+  }
 });
 
 /*

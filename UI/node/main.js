@@ -672,9 +672,13 @@ app.post('/userclientmap', function(req, res) {
           console.log(error);
           res.send("Some error occured");
         } else {
-          res.render("mapuserclientstatus.jade", {
-            csrf: req.session.csrfCookie
-          });
+          if(JSON.parse(body).status == "Duplicate"){
+            res.send("Found Duplicate clients");
+          } else {
+            res.render("mapuserclientstatus.jade", {
+              csrf: req.session.csrfCookie
+            });
+          }
         }
       });
     } else {
