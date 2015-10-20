@@ -179,7 +179,7 @@ app.get('/logout/:csrf', function(req, res) {
 app.get('/gettools/:clientid', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/getallclienttools/" + req.params.clientid,
+      url: "http://"+config.serverIP+":"+config.serverPort+"/getallclienttools/" + encodeURIComponent(req.params.clientid),
       method: "GET",
     }
     request(options, function(error, response, body) {
@@ -207,7 +207,7 @@ app.get('/gettoolinfo/:clientid/:toolid', function(req, res) {
   if (req.session.userAuth == true) {
     console.log(req.params.clientid);
     var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/gettoolinfo/" + req.params.clientid + "/" + req.params.toolid,
+      url: "http://"+config.serverIP+":"+config.serverPort+"/gettoolinfo/" + encodeURIComponent(req.params.clientid) + "/" + encodeURIComponent(req.params.toolid),
       method: "GET",
     }
     request(options, function(error, response, body) {
@@ -313,7 +313,7 @@ app.post('/getreport', function(req, res) {
       console.log(req.body.scanid);
       if (req.body.scanid != "") {
         var options = {
-          url: "http://"+config.serverIP+":"+config.serverPort+"/getreport/" + req.body.scanid,
+          url: "http://"+config.serverIP+":"+config.serverPort+"/getreport/" + encodeURIComponent(req.body.scanid),
           method: "GET"
         }
         request(options, function(error, response, body) {
