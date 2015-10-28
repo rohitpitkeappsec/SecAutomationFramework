@@ -27,13 +27,13 @@ html
                 tr
                   td User ID
                   td
-                    select(name='userid')
+                    select(name='userid', required)
                       each user in userid
                         option(value='#{user}') #{user}
                 tr
                   td Client
                   td
-                    select(name='clientid')
+                    select(name='clientid', required)
                       each client in clientid
                         option(value='#{client}') #{client}
                 tr

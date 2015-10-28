@@ -15,6 +15,7 @@ var config = require('./config.json');
 var multer = require('multer');
 var session = require('express-session');
 var jwt = require('jsonwebtoken');
+var validator = require('validator');
 var upload = multer({
   dest: './tools/'
 });
@@ -470,7 +471,7 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
               }
             });
           });
-        } catch (ex){
+        } catch (ex) {
           console.log("error extracting file");
           fs.unlink(req.file.path);
           fs.unlink(__dirname + "/tools/" + req.file.originalname);
@@ -491,33 +492,45 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
 app.post('/admin/userclientmap/', function(req, res) {
   userName = req.body.username;
   clientID = req.body.clientID;
-  var duplicate = false;
-  for(var i=0; i< clientID.length-1; i++) {
-    for (var j=i+1; j<clientID.length; j++) {
-      if(clientID[i]==clientID[j]) {
-        duplicate = true;
-      }
-    }
-  }
-  if (duplicate == false) {
-    db.addClientUserMapping(userName, clientID, function(status) {
-      if (status == "ok") {
-        console.log("Db entered");
-        res.send({
-          "status": "Success"
-        });
-      } else {
-        console.log("error inserting in db");
-        res.status(404).send({
-          "status": "Fail"
-        });
-      }
+  if (userName == '') {
+    console.log("Username Missing");
+    res.status(404).send({
+      "status": "Fail"
+    });
+  } else if (clientID == '') {
+    console.log("clientID Missing");
+    res.status(404).send({
+      "status": "Fail"
     });
   } else {
-    console.log("error inserting in db");
+    var duplicate = false;
+    for (var i = 0; i < clientID.length - 1; i++) {
+      for (var j = i + 1; j < clientID.length; j++) {
+        if (clientID[i] == clientID[j]) {
+          duplicate = true;
+        }
+      }
+    }
+    if (duplicate == false) {
+      db.addClientUserMapping(userName, clientID, function(status) {
+        if (status == "ok") {
+          console.log("Db entered");
+          res.send({
+            "status": "Success"
+          });
+        } else {
+          console.log("error inserting in db");
+          res.status(404).send({
+            "status": "Fail"
+          });
+        }
+      });
+    } else {
+      console.log("error inserting in db");
       res.status(404).send({
         "status": "Duplicate"
-    });
+      });
+    }
   }
 });
 
@@ -528,8 +541,36 @@ app.post('/admin/userclientmap/', function(req, res) {
  */
 app.post('/admin/adduser/', function(req, res) {
   userData = req.body;
-  db.isUser(userData.username, function(status){
-    if(status == false){
+  username = userData.username;
+  password = userData.password;
+  email = userData.email;
+  console.log(username + email + req.body.userid);
+
+  if (username == '') { //  Username validation
+    console.log("Username Empty");
+    res.status(404).send({
+      "status": "Fail"
+    });
+  } else if (!validator.isAlphanumeric(username)) {
+    console.log("Invalid Username");
+    res.status(406).send({
+      "status": "InvalidUser"
+    });
+
+  } else if (email == '') { // Email validation
+    console.log("Email Empty");
+    res.status(404).send({
+      "status": "Fail"
+    });
+  } else if (!validator.isEmail(email)) {
+    console.log("Invalid email");
+    res.status(406).send({
+      "status": "InvalidEmail"
+    });
+
+  } else {
+    db.isUser(userData.username, function(status) {
+      if (status == false) {
         db.addUserInDB(userData, function(status) {
           if (status == "ok") {
             console.log("User entered");
@@ -543,13 +584,14 @@ app.post('/admin/adduser/', function(req, res) {
             });
           }
         });
-    } else {
-      console.log("user exists");
-      res.status(404).send({
-        "status": "Fail"
-      });
-    }
-  });
+      } else {
+        console.log("user exists");
+        res.status(404).send({
+          "status": "Fail"
+        });
+      }
+    });
+  }
 });
 
 /*
@@ -655,24 +697,37 @@ app.get('/admin/deleteservertool/:toolID', function(req, res) {
  */
 app.get('/getreport/:scanID', function(req, res) {
   var reportScanID = req.params.scanID;
-  db.getReport(reportScanID, function(reportData) {
-    if (reportData == false) {
-      res.send("No report Available");
-    } else {
-      try {
-        var parser = require('./tools/' + reportData.toolNPM + '/' + reportData.toolNPM + 'Parser.js');
-        parser.parse(reportData, function(data) {
-          res.send(data);
-        });
-      } catch (ex) {
-        //run raw
-        console.log("got exception");
-        reportData.err = true;
-        console.log(reportData);
-        res.send(reportData);
+  if (reportScanID == '') { //  ScanID validation
+    console.log("ScanID Empty");
+    res.status(404).send({
+      "status": "Fail"
+    });
+  } else if (!validator.isNumeric(reportScanID)) {
+    console.log("Invalid scanID");
+    res.status(406).send({
+      "status": "InvalidscanID"
+    });
+
+  } else {
+    db.getReport(reportScanID, function(reportData) {
+      if (reportData == false) {
+        res.send("No report Available");
+      } else {
+        try {
+          var parser = require('./tools/' + reportData.toolNPM + '/' + reportData.toolNPM + 'Parser.js');
+          parser.parse(reportData, function(data) {
+            res.send(data);
+          });
+        } catch (ex) {
+          //run raw
+          console.log("got exception");
+          reportData.err = true;
+          console.log(reportData);
+          res.send(reportData);
+        }
       }
-    }
-  });
+    });
+  }
 });
 
 /*
@@ -738,11 +793,13 @@ app.get('/getclientidfortoolid/:toolID', function(req, res) {
  */
 app.get('/getallusers', function(req, res) {
   db.getUsers(function(users) {
-    var usersNames = {"userList":[]}
+    var usersNames = {
+      "userList": []
+    }
     if (users == false) {
       res.send("No information Available");
     } else {
-      for(var i=0; i<users.length; i++){
+      for (var i = 0; i < users.length; i++) {
         usersNames.userList.push(users[i].username);
       }
       res.send(usersNames);
@@ -781,7 +838,7 @@ function changeClientStatus() {
  * drivers from update server to this server
  */
 function downloadAndUpdate(toolID, version) {
-  var request = http.get("http://"+updateServerInfo.serverIP+":"+updateServerInfo.serverPort+"/getdriver/" + toolID, function(response) {
+  var request = http.get("http://" + updateServerInfo.serverIP + ":" + updateServerInfo.serverPort + "/getdriver/" + toolID, function(response) {
     if (response.statusCode === 200) {
       var file = fs.createWriteStream(__dirname + "/tools/" + toolID + ".zip");
       response.pipe(file);

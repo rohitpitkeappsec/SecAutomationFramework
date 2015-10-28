@@ -2,35 +2,39 @@ doctype html
 html
   head
     meta(charset='UTF-8')
-    |   
     title Rudra Report
-    |     
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+    script.
+      function isNumber(evt) {
+      var iKeyCode = (evt.which) ? evt.which : evt.keyCode
+      if (iKeyCode != 46 && iKeyCode > 31 && (iKeyCode < 48 || iKeyCode > 57))
+      return false;
+      return true;
+      }
   body
     .main
       #home
-        h3 
-          a(href="/home/") Home 
-          a(href="/report/") Report 
-          a(href="/tools/") Tools 
-          a(href="/settings/") Settings 
-          a(href="/logout/#{csrf}") Logout
-        |     
+        h3
+          a(href='/home/') Home 
+          a(href='/report/') Report 
+          a(href='/tools/') Tools 
+          a(href='/settings/') Settings 
+          a(href='/logout/#{csrf}') Logout
         fieldset
           center
             span Scan Report
             br
             br
-            form(action='/getreport', method='post' target='_blank')
-              input(type='hidden', name='csrf' value='#{csrf}')
+            form(action='/getreport', method='post', target='_blank')
+              input(type='hidden', name='csrf', value='#{csrf}')
               table
                 tr
                   td Enter Scan ID
-                  td 
-                    input(type='text', name='scanid')
+                  td
+                    input(type='text', name='scanid', onkeypress='javascript:return isNumber (event)')
                 tr
-                  td(colspan=2)
+                  td(colspan='2')
                     input(type='submit', value='Get Report')
-             br
+            br
       // end login-form
- 
+

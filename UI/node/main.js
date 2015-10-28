@@ -302,7 +302,7 @@ app.post('/getreport', function(req, res) {
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
     var csrfCookie = "";
-
+    
     for (var i = 0; i < cookieArray.length; i++) {
       var tempArr = cookieArray[i].split("csrfToken=");
       if (tempArr.length == 2) {
@@ -327,6 +327,11 @@ app.post('/getreport', function(req, res) {
           } else {
             console.log(body);
             var jsonBody = JSON.parse(body);
+	    
+	    if (jsonBody.status=="InvalidscanID"){
+             res.send("ScanID invalid");
+             }
+	    
             if (jsonBody.err == true) {
               res.send(body);
             } else {
@@ -576,8 +581,12 @@ app.post('/adduser', function(req, res) {
           console.log(error);
           res.send("Some error occured");
         } if (JSON.parse(body).status=="Fail"){
-          res.send("user exists");
-        } else {
+          res.send("user exists or Invalid");
+        } else if (JSON.parse(body).status=="InvalidUser"){
+          res.send("Username format invalid");
+        }else if (JSON.parse(body).status=="InvalidEmail"){
+          res.send("Email format invalid");
+        }else {
           res.render("adduserstatus.jade", {
             csrf: req.session.csrfCookie
           });
@@ -671,7 +680,9 @@ app.post('/userclientmap', function(req, res) {
         if (error) {
           console.log(error);
           res.send("Some error occured");
-        } else {
+        } else if(JSON.parse(body).status == "Fail"){
+            res.send("Username or ClientID missing");
+          } else{
           if(JSON.parse(body).status == "Duplicate"){
             res.send("Found Duplicate clients");
           } else {
