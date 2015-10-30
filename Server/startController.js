@@ -261,7 +261,9 @@ app.get('/deleteclienttool/:clientID/:toolID', function(req, res) {
       var request = http.request(options, callback);
       request.on('error', function(e) {
         console.log(e.message);
-        res.send("error");
+        res.status(404).send({
+          "status": "Fail"
+        });
       });
       request.end();
     });

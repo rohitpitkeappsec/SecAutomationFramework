@@ -235,6 +235,34 @@ app.get('/gettoolinfo/:clientid/:toolid', function(req, res) {
   }
 });
 
+app.get('/deleteclienttool/:clientid/:toolid', function(req, res) {
+  if (req.session.userAuth == true) {
+    var options = {
+      url: "http://"+config.serverIP+":"+config.serverPort+"/deleteclienttool/" + encodeURIComponent(req.params.clientid) + "/" + encodeURIComponent(req.params.toolid),
+      method: "GET",
+    }
+    request(options, function(error, response, body) {
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        var jsonBody = JSON.parse(body);
+        if (jsonBody.status == "Fail") {
+	  res.send("Some error occured on client");
+	} else if (jsonBody.status == "Success") {
+	  res.render("deltoolclient.jade", {
+            csrf: req.session.csrfCookie
+          });
+	}
+      }
+    });
+  } else {
+    res.redirect('/');
+  }
+});
+
 app.post('/runtool', function(req, res) {
   if (req.session.userAuth == true) {
     var csrfBodyToken = req.body.csrf;
