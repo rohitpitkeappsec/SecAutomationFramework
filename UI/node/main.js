@@ -11,6 +11,7 @@ var multer = require('multer');
 var FormData = require('form-data');
 var crypto = require('crypto');
 var config = require('./config.json');
+var validator = require('validator');
 
 var app = express();
 
@@ -25,21 +26,23 @@ app.use(session({
   resave: true
 }));
 app.use(bodyParser.json());
-app.set('port', config.port )
+app.set('port', config.port)
 app.set('views'.__dirname + '/views');
 app.set('view engine', 'jade');
 
 
 var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: function(req, file, cb) {
     cb(null, './temptools/')
   },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname )
+  filename: function(req, file, cb) {
+    cb(null, file.originalname)
   }
 })
- 
-var upload = multer({ storage: storage });
+
+var upload = multer({
+  storage: storage
+});
 
 
 var getRandomNumber = function(size, callback) {
@@ -53,19 +56,23 @@ var getRandomNumber = function(size, callback) {
 }
 
 app.get('/', function(req, res) {
+
   if (req.session.userAuth == true)
-    res.render("index.jade");
+    res.redirect('/home');
+  //    res.render("index.jade");
   else
     res.render('login.jade');
 });
 
 app.get('/css/:file', function(req, res) {
+  //validate file name and path - dont allow dots and slashes in the file name
   res.sendFile('css/' + req.params.file, {
     root: path.join(__dirname, '')
   });
 });
 
 app.get('/js/:file', function(req, res) {
+  //validate file name and path - dont allow dots and slashes in the file name
   res.sendFile('js/' + req.params.file, {
     root: path.join(__dirname, '')
   });
@@ -74,56 +81,65 @@ app.get('/js/:file', function(req, res) {
 app.post('/loginauth', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  var headers = {
-    'Content-Type': 'application/json'
-  }
-  var options = {
-    url: "http://"+config.serverIP+":"+config.serverPort+"/authenticate/",
-    headers: headers,
-    method: "POST",
-    form: {
-      'userName': username,
-      'password': password
-    }
-  }
 
-  request(options, function(error, response, body) {
-    if (error) {
-      req.session.userAuth = false;
-      res.redirect('/');
-      console.log(error);
-    } else if (body == "error") {
-      res.send("Some error occured on client");
-    } else {
-      var jsonBody = JSON.parse(body)
-        //console.log(jsonBody);
-      console.log(jsonBody.status);
-      if (jsonBody.status == 'Success') {
-        req.session.userAuth = true;
-        req.session.userName = username;
-        getRandomNumber(64, function(status, randomNumber) {
-          if (status === false) {
-            res.redirect('/');
-          } else {
-            req.session.csrfCookie = randomNumber;
-            res.cookie('csrfToken', randomNumber, {
-              httpOnly: true
-            });
-            res.redirect('/home/');
-          }
-        });
-      } else {
-        req.session.userAuth = false;
-        res.redirect('/');
+  //validate user name contains only alphanumeric values, length minimum 4, maximum 16
+  //validate password length minimum 4, maximum 16
+  console.log("Username = " + username);
+  if ((!validator.isLength(username, 4, 16)) || (!validator.isAlphanumeric(username)) || (!validator.isLength(password, 4, 16))) {
+    console.log("Usrname and Password validation Fail");
+    res.send("Invalid Username or Password Format");
+  } else {
+    var headers = {
+      'Content-Type': 'application/json'
+    }
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/authenticate/",
+      headers: headers,
+      method: "POST",
+      form: {
+        'userName': username,
+        'password': password
       }
     }
-  });
+
+    request(options, function(error, response, body) {
+      if (error) {
+        req.session.userAuth = false;
+        res.redirect('/');
+        console.log(error);
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        var jsonBody = JSON.parse(body)
+          //console.log(jsonBody);
+        console.log(jsonBody.status);
+        if (jsonBody.status == 'Success') {
+          req.session.userAuth = true;
+          req.session.userName = username;
+          getRandomNumber(64, function(status, randomNumber) {
+            if (status === false) {
+              res.redirect('/');
+            } else {
+              req.session.csrfCookie = randomNumber;
+              res.cookie('csrfToken', randomNumber, {
+                httpOnly: true
+              });
+              res.redirect('/home/');
+            }
+          });
+        } else {
+          req.session.userAuth = false;
+          res.redirect('/');
+        }
+      }
+    });
+  }
 });
 
 app.get('/home/', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/getclients/" + req.session.userName,
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getclients/" + req.session.userName,
       method: "GET",
     }
 
@@ -178,26 +194,35 @@ app.get('/logout/:csrf', function(req, res) {
 
 app.get('/gettools/:clientid', function(req, res) {
   if (req.session.userAuth == true) {
-    var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/getallclienttools/" + encodeURIComponent(req.params.clientid),
-      method: "GET",
-    }
-    request(options, function(error, response, body) {
-      if (error) {
-        console.log(error);
-        res.send("Some error occured");
-      } else if (body == "error") {
-        res.send("Some error occured on client");
-      } else {
-        var jsonBody = JSON.parse(body)
-        var toolList = jsonBody.toolList;
-        res.render("toollist.jade", {
-          tools: toolList,
-          client: req.params.clientid,
-          csrf: req.session.csrfCookie
-        });
+
+    // validate clientid - must be numeric
+    var client = req.params.clientid;
+    //console.log("Client id=" + client);
+    if ((!validator.isNumeric(client))) {
+      res.send("Invalid clientID Format");
+    } else {
+
+      var options = {
+        url: "http://" + config.serverIP + ":" + config.serverPort + "/getallclienttools/" + encodeURIComponent(req.params.clientid),
+        method: "GET",
       }
-    });
+      request(options, function(error, response, body) {
+        if (error) {
+          console.log(error);
+          res.send("Some error occured");
+        } else if (body == "error") {
+          res.send("Some error occured on client");
+        } else {
+          var jsonBody = JSON.parse(body)
+          var toolList = jsonBody.toolList;
+          res.render("toollist.jade", {
+            tools: toolList,
+            client: req.params.clientid,
+            csrf: req.session.csrfCookie
+          });
+        }
+      });
+    }
   } else {
     res.redirect('/');
   }
@@ -205,40 +230,52 @@ app.get('/gettools/:clientid', function(req, res) {
 
 app.get('/gettoolinfo/:clientid/:toolid', function(req, res) {
   if (req.session.userAuth == true) {
-    console.log(req.params.clientid);
-    var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/gettoolinfo/" + encodeURIComponent(req.params.clientid) + "/" + encodeURIComponent(req.params.toolid),
-      method: "GET",
-    }
-    request(options, function(error, response, body) {
-      if (error) {
-        console.log(error);
-        res.send("Some error occured");
-      } else if (body == "error") {
-        res.send("Some error occured on client");
-      } else {
-        var jsonBody = JSON.parse(body);
-        var keys = Object.keys(jsonBody);
-        console.log(keys);
-        req.session.runBody = jsonBody;
-        req.session.currentClient = req.params.clientid;
-        req.session.currentTool = req.params.toolid;
-        res.render("toolinfo.jade", {
-          keys: keys,
-          values: jsonBody,
-          csrf: req.session.csrfCookie
-        });
+    var client = req.params.clientid;
+    var toolid = req.params.toolid;
+
+    console.log("clientid = " + client);
+    console.log("toolid = " + toolid);
+
+    // validate clientid and toolid   //###done
+    if ((!validator.isNumeric(client)) || (!validator.isAlphanumeric(toolid))) {
+      res.send("Invalid clientID/toolName Format");
+    } else {
+      var options = {
+        url: "http://" + config.serverIP + ":" + config.serverPort + "/gettoolinfo/" + encodeURIComponent(req.params.clientid) + "/" + encodeURIComponent(req.params.toolid),
+        method: "GET",
       }
-    });
+      request(options, function(error, response, body) {
+        if (error) {
+          console.log(error);
+          res.send("Some error occured");
+        } else if (body == "error") {
+          res.send("Some error occured on client");
+        } else {
+          var jsonBody = JSON.parse(body);
+          var keys = Object.keys(jsonBody);
+          console.log(keys);
+          req.session.runBody = jsonBody;
+          req.session.currentClient = req.params.clientid;
+          req.session.currentTool = req.params.toolid;
+          res.render("toolinfo.jade", {
+            keys: keys,
+            values: jsonBody,
+            csrf: req.session.csrfCookie
+          });
+        }
+      });
+    }
   } else {
     res.redirect('/');
   }
 });
 
+// delete tool from a launcher system
+
 app.get('/deleteclienttool/:clientid/:toolid', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/deleteclienttool/" + encodeURIComponent(req.params.clientid) + "/" + encodeURIComponent(req.params.toolid),
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/deleteclienttool/" + encodeURIComponent(req.params.clientid) + "/" + encodeURIComponent(req.params.toolid),
       method: "GET",
     }
     request(options, function(error, response, body) {
@@ -250,12 +287,12 @@ app.get('/deleteclienttool/:clientid/:toolid', function(req, res) {
       } else {
         var jsonBody = JSON.parse(body);
         if (jsonBody.status == "Fail") {
-	  res.send("Some error occured on client");
-	} else if (jsonBody.status == "Success") {
-	  res.render("deltoolclient.jade", {
+          res.send("Some error occured on client");
+        } else if (jsonBody.status == "Success") {
+          res.render("deltoolclient.jade", {
             csrf: req.session.csrfCookie
           });
-	}
+        }
       }
     });
   } else {
@@ -288,7 +325,7 @@ app.post('/runtool', function(req, res) {
         'Content-Type': 'application/json'
       }
       var options = {
-        url: "http://"+config.serverIP+":"+config.serverPort+"/runtool/" + req.session.currentClient + "/" + req.session.currentTool,
+        url: "http://" + config.serverIP + ":" + config.serverPort + "/runtool/" + req.session.currentClient + "/" + req.session.currentTool,
         headers: headers,
         method: "POST",
         body: JSON.stringify(runBody)
@@ -330,7 +367,7 @@ app.post('/getreport', function(req, res) {
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
     var csrfCookie = "";
-    
+
     for (var i = 0; i < cookieArray.length; i++) {
       var tempArr = cookieArray[i].split("csrfToken=");
       if (tempArr.length == 2) {
@@ -338,10 +375,16 @@ app.post('/getreport', function(req, res) {
       }
     }
     if (csrfBodyToken == csrfCookie) {
-      console.log(req.body.scanid);
-      if (req.body.scanid != "") {
+      // validate scanid for undefined or null
+      var scanid = req.body.scanid;
+      console.log(scanid);
+
+      if ((scanid == null) || (scanid == "") || (!validator.isNumeric(scanid)) || (scanid <= 0)) {
+        error = "ERROR: Missing or invalid scan ID ";
+        res.send(error);
+      } else {
         var options = {
-          url: "http://"+config.serverIP+":"+config.serverPort+"/getreport/" + encodeURIComponent(req.body.scanid),
+          url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(req.body.scanid),
           method: "GET"
         }
         request(options, function(error, response, body) {
@@ -355,28 +398,27 @@ app.post('/getreport', function(req, res) {
           } else {
             console.log(body);
             var jsonBody = JSON.parse(body);
-	    
-	    if (jsonBody.status=="InvalidscanID"){
-             res.send("ScanID invalid");
-             }
-	    
+
+            if (jsonBody.status == "InvalidscanID") {
+              res.send("ScanID invalid");
+            }
+
             if (jsonBody.err == true) {
               res.send(body);
             } else {
               var html = createHTMLstring(jsonBody);
               //console.log(html);
-              htmlToPdf.convertHTMLString(html, './test.pdf', function(error, success) {
+              var reportfilename = "./report_" + req.session.userName + ".pdf"; // remove test.pdf
+              htmlToPdf.convertHTMLString(html, reportfilename, function(error, success) {
                 if (error) {
-                  console.log("enable to create pdf");
+                  console.log("unable to create pdf");
                 } else {
-                  res.sendFile(path.join(__dirname, '') + '/test.pdf');
+                  res.sendFile(path.join(__dirname, '/') + reportfilename);
                 }
               });
             }
           }
         });
-      } else {
-        res.send("Invalid ScanID");
       }
     } else {
       res.send("Invalid CSRF token");
@@ -424,7 +466,7 @@ app.get('/uploadtoserver', function(req, res) {
   }
 });
 
-app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
+app.post('/uploadtoolzip', upload.single('tooldriver'), function(req, res) {
   if (req.session.userAuth == true) {
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
@@ -449,7 +491,7 @@ app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
           path: "/admin/uploadtoolserver/",
           headers: form.getHeaders()
         });
-      //  console.log(form.filename);
+        //  console.log(form.filename);
         form.pipe(request);
         request.on('response', function(resEngine) {
           console.log(resEngine.statusCode);
@@ -485,7 +527,7 @@ app.post('/uploadtoolzip',upload.single('tooldriver'),function(req, res) {
 app.get('/pushtoclient', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/admin/getallservertoolinfo/",
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/getallservertoolinfo/",
       method: "GET"
     }
     request(options, function(error, response, body) {
@@ -523,32 +565,45 @@ app.post('/tooltoclient', function(req, res) {
     if (csrfBodyToken == csrfCookie) {
       var toolid = req.body.toolid;
       var clientid = req.body.clientid;
-      var body = {
-        "clientID": clientid,
-        "toolID": toolid
-      };
-      var headers = {
-        'Content-Type': 'application/json'
-      }
-      var options = {
-        url: "http://"+config.serverIP+":"+config.serverPort+"/admin/pushtoolclient/",
-        headers: headers,
-        method: "POST",
-        body: JSON.stringify(body)
-      }
-      request(options, function(error, response, body) {
-        if (error) {
-          console.log(error);
-          res.send("Some error occured");
-        } else if (body == "error") {
-          res.send("Some error occured on client");
-        } else {
-          var toolList = JSON.parse(body).toolList;
-          res.render("pushstatus.jade", {
-            csrf: req.session.csrfCookie
-          });
+
+      console.log("clientid = " + clientid);
+      console.log("toolid = " + toolid);
+      // Validate that toolid and clientid
+      // Either explicitly check for typeof clientid === 'undefined'
+      // or just check for null value, which includes check for undefined values
+      // toolid must be alphanumeric, clientid must be only numeric
+      if ((clientid == null) || (toolid == null) || (!validator.isNumeric(clientid)) || (!validator.isAlphanumeric(toolid)) || (clientid <= 0)) {
+        error = "ERROR: Missing or invalid client ID and/or tool name";
+        res.send(error);
+      } else {
+        var body = {
+          "clientID": clientid,
+          "toolID": toolid
+        };
+
+        var headers = {
+          'Content-Type': 'application/json'
         }
-      });
+        var options = {
+          url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/pushtoolclient/",
+          headers: headers,
+          method: "POST",
+          body: JSON.stringify(body)
+        }
+        request(options, function(error, response, body) {
+          if (error) {
+            console.log(error);
+            res.send("Some error occured");
+          } else if (body == "error") {
+            res.send("Some error occured on client");
+          } else {
+            var toolList = JSON.parse(body).toolList;
+            res.render("pushstatus.jade", {
+              csrf: req.session.csrfCookie
+            });
+          }
+        });
+      }
     } else {
       res.send("Invalid CSRF token");
     }
@@ -589,37 +644,52 @@ app.post('/adduser', function(req, res) {
         csrfCookie = tempArr[1];
       }
     }
+
     if (csrfBodyToken == csrfCookie) {
-      var body = {
-        "username": req.body.userid,
-        "password": req.body.password,
-        "email": req.body.email
-      };
-      var headers = {
-        'Content-Type': 'application/json'
-      }
-      var options = {
-        url: "http://"+config.serverIP+":"+config.serverPort+"/admin/adduser/",
-        headers: headers,
-        method: "POST",
-        body: JSON.stringify(body)
-      }
-      request(options, function(error, response, body) {
-        if (error) {
-          console.log(error);
-          res.send("Some error occured");
-        } if (JSON.parse(body).status=="Fail"){
-          res.send("user exists or Invalid");
-        } else if (JSON.parse(body).status=="InvalidUser"){
-          res.send("Username format invalid");
-        }else if (JSON.parse(body).status=="InvalidEmail"){
-          res.send("Email format invalid");
-        }else {
-          res.render("adduserstatus.jade", {
-            csrf: req.session.csrfCookie
-          });
+      var username = req.body.userid;
+      var password = req.body.password;
+      var email = req.body.email;
+
+      // validate user name length, alphanumeric, password length and email
+      if ((username == null) || (password == null) || (email == null) || (!validator.isLength(username, 4, 16)) || (!validator.isAlphanumeric(username)) || (!validator.isLength(password, 4, 16)) || (!validator.isEmail(email))) {
+        console.log("Usrname, Password or email validation Fail");
+        console.log("Username must be 4 to 16 chars long, alpha numeric");
+        console.log("Password - 4 to 16 chars long");
+        console.log("Email - a valid email with id@domain format");
+        res.send("Invalid Username or Password Format");
+      } else {
+        var body = {
+          "username": req.body.userid,
+          "password": req.body.password,
+          "email": req.body.email
+        };
+        var headers = {
+          'Content-Type': 'application/json'
         }
-      });
+        var options = {
+          url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/adduser/",
+          headers: headers,
+          method: "POST",
+          body: JSON.stringify(body)
+        }
+        request(options, function(error, response, body) {
+          if (error) {
+            console.log(error);
+            res.send("Some error occured");
+          }
+          if (JSON.parse(body).status == "Fail") {
+            res.send("user exists or Invalid");
+          } else if (JSON.parse(body).status == "InvalidUser") {
+            res.send("Username format invalid");
+          } else if (JSON.parse(body).status == "InvalidEmail") {
+            res.send("Email format invalid");
+          } else {
+            res.render("adduserstatus.jade", {
+              csrf: req.session.csrfCookie
+            });
+          }
+        });
+      } // else - validation success
     } else {
       res.send("Invalid CSRF token");
     }
@@ -631,7 +701,7 @@ app.post('/adduser', function(req, res) {
 app.get('/userclientui', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://"+config.serverIP+":"+config.serverPort+"/admin/getallclients/",
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/getallclients/",
       method: "GET"
     }
     request(options, function(error, response, body) {
@@ -644,7 +714,7 @@ app.get('/userclientui', function(req, res) {
         //console.log(body);
         var clientList = JSON.parse(body).clientID;
         var userOpt = {
-          url: "http://"+config.serverIP+":"+config.serverPort+"/getallusers",
+          url: "http://" + config.serverIP + ":" + config.serverPort + "/getallusers",
           method: "GET"
         }
         request(userOpt, function(error, userRes, userBody) {
@@ -683,43 +753,69 @@ app.post('/userclientmap', function(req, res) {
       }
     }
     if (csrfBodyToken == csrfCookie) {
+
       var clients = req.session.userClients;
-      clients.push(parseInt(req.body.clientid));
-      //console.log(clients);
-      for(var i=0; i<clients.length; i++){
-        if(clients[i] == 'No Clients'){
-          clients.splice(i, 1);
-        }
-      }
-      var body = {
-        "username": req.body.userid,
-        "clientID": clients
-      };
-      var headers = {
-        'Content-Type': 'application/json'
-      }
-      var options = {
-        url: "http://"+config.serverIP+":"+config.serverPort+"/admin/userclientmap/",
-        headers: headers,
-        method: "POST",
-        body: JSON.stringify(body)
-      }
-      request(options, function(error, response, body) {
-        if (error) {
-          console.log(error);
-          res.send("Some error occured");
-        } else if(JSON.parse(body).status == "Fail"){
-            res.send("Username or ClientID missing");
-          } else{
-          if(JSON.parse(body).status == "Duplicate"){
-            res.send("Found Duplicate clients");
-          } else {
-            res.render("mapuserclientstatus.jade", {
-              csrf: req.session.csrfCookie
-            });
+      var clientid = req.body.clientid;
+      var user = req.body.userid;
+
+      console.log("client ID= " + clientid);
+      console.log("list of client IDs= " + clients);
+      console.log("Username = " + user);
+
+      // Validate that toolid and clientid
+      // check for null value, which includes check for undefined values
+      // toolid must be alphanumeric, clientid must be only numeric
+      if ((user == null) || (clientid == null) || (!validator.isAlphanumeric(user)) || (!validator.isNumeric(clientid)) // ### please validate the client
+        || (clientid <= 0)) {
+        error = "ERROR: Missing or invalid UserID and/or ClientID";
+        res.send(error);
+      } else {
+
+        // check for duplicate client id mapping request,
+        // or if this is the first client for this user
+        for (var i = 0; i < clients.length; i++) {
+          if (clients[i] == clientid) {
+            res.send(" Duplicate client id");
+            return;
+          }
+          if (clients[i] == 'No Clients') {
+            clients.splice(i, 1);
           }
         }
-      });
+
+        // client id and user id both valid, not previously mapped
+        clients.push(parseInt(req.body.clientid));
+
+        var body = {
+          "username": req.body.userid,
+          "clientID": clients
+        };
+        var headers = {
+          'Content-Type': 'application/json'
+        }
+        var options = {
+          url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/userclientmap/",
+          headers: headers,
+          method: "POST",
+          body: JSON.stringify(body)
+        }
+        request(options, function(error, response, body) {
+          if (error) {
+            console.log(error);
+            res.send("Some error occured");
+          } else if (JSON.parse(body).status == "Fail") {
+            res.send("Username or ClientID missing");
+          } else {
+            if (JSON.parse(body).status == "Duplicate") {
+              res.send("Found Duplicate clients");
+            } else {
+              res.render("mapuserclientstatus.jade", {
+                csrf: req.session.csrfCookie
+              });
+            }
+          }
+        });
+      }
     } else {
       res.send("Invalid CSRF token");
     }
@@ -729,5 +825,5 @@ app.post('/userclientmap', function(req, res) {
 });
 
 http.createServer(app).listen(app.get('port'), function(req, res) {
-  console.log('Listing to port '+config.port);
+  console.log('Listing to port ' + config.port);
 });

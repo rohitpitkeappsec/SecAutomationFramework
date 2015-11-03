@@ -431,60 +431,118 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
     });
   } else {
     fs.readFile(req.file.path, function(err, data) {
+      if (err) throw err;
+
       var filename = req.file.originalname.split("/");
       var newPath = __dirname + "/tools/" + filename[filename.length - 1];
+
+      var toolname = filename[filename.length - 1].split(".")[0];
+      var toolfolder = toolname + "/";
+      var destfolder = __dirname + "/tools/" + toolname + "/";
+      var packageFile = toolname + "/package.json";
+
       var toolData = {
-        "toolID": filename[filename.length - 1].split(".")[0],
-        "toolName": filename[filename.length - 1].split(".")[0],
-        "toolNPM": filename[filename.length - 1].split(".")[0],
+        "toolID": toolname,
+        "toolName": toolname,
+        "toolNPM": toolname,
         "version": ''
       };
-      fs.writeFile(newPath, data, function(err) {
+      fs.writeFile(newPath, data, function(err) { // create zip file in local folder
         if (err) throw err;
-        try {
+        try { // this should be outside all processing
           var zip = new Admzip(newPath);
-          zip.extractAllTo( /*target path*/ "./tools/", /*overwrite*/ true);
-          var packageFile = __dirname + "/tools/" + filename[filename.length - 1].split(".")[0] + "/package.json";
-          fs.readFile(packageFile, 'utf8', function(err, data) {
-            packageJSONData = JSON.parse(data);
-            console.log(packageJSONData.version);
-            toolData.version = packageJSONData.version;
-            db.addToolInfo(toolData, function(status) {
-              if (status == "ok") {
+
+          var toolfolderinZip = zip.getEntry(toolfolder);
+          var zipFiles = zip.getEntries();
+          var isDriverFile = false;
+          var isParserFile = false;
+          var isPackageFile = false;
+          var isRunDataFile = false;
+
+          for (var i = 0; i < zipFiles.length; i++) {
+            if (zipFiles[i].entryName == toolname + "/" + toolname + ".json") {
+              isRunDataFile = true;
+            } else if (zipFiles[i].entryName == toolname + "/" + toolname + ".js") {
+              isDriverFile = true;
+            } else if (zipFiles[i].entryName == toolname + "/package.json") {
+              isPackageFile = true;
+            } else if (zipFiles[i].entryName == toolname + "/" + toolname + "Parser.js") {
+              isParserFile = true;
+            }
+          }
+          //console.log(JSON.stringify(zip.getEntries()));
+          // console.log("tool files folder: " + toolfolderinZip );
+
+          if (toolfolderinZip != null && isDriverFile && isParserFile && isPackageFile && isRunDataFile) {
+
+            // process the files by extracting the files and making DB entry
+
+            packageFile = destfolder + "package.json";
+            zip.extractAllTo( /*target path*/ "./tools/", /*overwrite*/ true);
+            fs.readFile(packageFile, 'utf8', function(err, data) {
+              packageJSONData = JSON.parse(data);
+              console.log(packageJSONData.version);
+              toolData.version = packageJSONData.version;
+              db.addToolInfo(toolData, function(status) {
                 fs.unlink(req.file.path, function(err) {
                   if (err) {
-                    console.log("error removing file");
-                    res.status(404).send({
-                      "status": "Fail"
-                    });
-                  } else {
-                    res.status(200).send({
-                      "status": "Success"
-                    });
+                    console.log("error removing file : $newPath");
                   }
                 });
-              } else {
-                console.log("error inserting in db");
-                fs.unlink(req.file.path);
-                fs.unlink(__dirname + "/tools/" + req.file.originalname);
-                res.status(404).send({
-                  "status": "Fail"
+                fs.unlink(newPath, function(err) {
+                  if (err) {
+                    console.log("error removing file : $newPath");
+                  }
                 });
+
+                if (status == "ok") {
+                  res.status(200).send({
+                    "status": "Success"
+                  });
+                } else { // adding tool info to DB failed
+                  console.log("error inserting in db");
+                  res.status(404).send({
+                    "status": "Fail"
+                  });
+                } // inner else
+              }); // db.addToolInfo
+            }); // fs.readFile of package file
+          } else { // IF for folder check in zip
+            console.log("### Necessary files not present in the zip... Failed");
+            console.log("error extracting file : " + newPath);
+            fs.unlink(req.file.path, function(err) {
+              if (err) {
+                console.log("error removing file : $newPath");
               }
             });
-          });
+            fs.unlink(newPath, function(err) {
+              if (err) {
+                console.log("error removing file : $newPath");
+              }
+            });
+            res.status(404).send({
+              "status": "Fail"
+            });
+          } // else
         } catch (ex) {
-          console.log("error extracting file");
-          fs.unlink(req.file.path);
-          fs.unlink(__dirname + "/tools/" + req.file.originalname);
+          fs.unlink(req.file.path, function(err) {
+            if (err) {
+              console.log("error removing file : $newPath");
+            }
+          });
+          fs.unlink(newPath, function(err) {
+            if (err) {
+              console.log("error removing file : $newPath");
+            }
+          });
           res.status(404).send({
             "status": "Fail"
           });
-        }
-      });
-    });
-  }
-});
+        } // catch
+      }); //writeFile
+    }); // readFile
+  } // outer else
+}); // API end
 
 /*
  * REST API
@@ -542,35 +600,29 @@ app.post('/admin/userclientmap/', function(req, res) {
  * Add new user
  */
 app.post('/admin/adduser/', function(req, res) {
-  userData = req.body;
-  username = userData.username;
-  password = userData.password;
-  email = userData.email;
-  console.log(username + email + req.body.userid);
+  var userData = req.body;
+  var username = userData.username;
+  var password = userData.password;
+  var email = userData.email;
 
-  if (username == '') { //  Username validation
-    console.log("Username Empty");
+  if ((username == null) || (!validator.isAlphanumeric(username)) || (!validator.isLength(username, 4, 16))) { //  Username validation
+    console.log("Username invalid");
     res.status(404).send({
       "status": "Fail"
     });
-  } else if (!validator.isAlphanumeric(username)) {
-    console.log("Invalid Username");
-    res.status(406).send({
-      "status": "InvalidUser"
-    });
 
-  } else if (email == '') { // Email validation
-    console.log("Email Empty");
+  } else if ((email == null) || (!validator.isEmail(email))) { // Email validation
+    console.log("Email invalid");
     res.status(404).send({
       "status": "Fail"
     });
-  } else if (!validator.isEmail(email)) {
-    console.log("Invalid email");
-    res.status(406).send({
-      "status": "InvalidEmail"
+  } else if ((password == null) || (!validator.isLength(password, 4, 16))) { // password length validation
+    console.log("password length too short");
+    res.status(404).send({
+      "status": "Fail"
     });
-
   } else {
+    console.log("username: " + username + "email: " + email);
     db.isUser(userData.username, function(status) {
       if (status == false) {
         db.addUserInDB(userData, function(status) {
@@ -930,7 +982,7 @@ function updateServerDrivers() {
         setTimeout(updateServerDrivers, config.updateTimeout);
       });
     }
-  });
+  }); // readFile (updateserver.config)
 }
 
 /*
