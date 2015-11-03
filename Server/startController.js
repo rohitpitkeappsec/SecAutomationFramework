@@ -489,11 +489,6 @@ app.post('/admin/uploadtoolserver/', upload.single('filename'), function(req, re
                     console.log("error removing file : $newPath");
                   }
                 });
-                fs.unlink(newPath, function(err) {
-                  if (err) {
-                    console.log("error removing file : $newPath");
-                  }
-                });
 
                 if (status == "ok") {
                   res.status(200).send({
