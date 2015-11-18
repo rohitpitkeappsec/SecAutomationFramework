@@ -6,6 +6,7 @@ var parse = function(data, callback){
     "metadata": {
         "reportname": "Heartbleed Scan Result",
         "scanid": data.scanID,
+        "target": host,
         "toolname": "HeartBleed Scan ",
         "tooltype": "Heartbleed scanning tool",
         "info": "Heartbleed scanning tool"

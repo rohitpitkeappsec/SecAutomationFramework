@@ -1,10 +1,12 @@
 var parse = function(data, callback){
+  var host = data.data[0].input;
   var lines = data.data[0].output.split('\n');
   //console.log(lines);
     var sendData = {
     "metadata": {
         "reportname": "NMAP Cipher scan report",
         "scanid": data.scanID,
+        "target": host,
         "toolname": "nmap cipher scan",
         "tooltype": "cipher scanning tool",
         "info": "Cipher scanning tool"

@@ -1,4 +1,5 @@
-var parse = function(data, callback){
+var parse = function(data, callback){ 
+  var host = data.data[0].input;
   var lines = data.data[0].output.split('\n');
   //console.log(lines);
   for(var i=0;i<lines.length;i++) {
@@ -30,6 +31,7 @@ var parse = function(data, callback){
     "metadata": {
         "reportname": "SQLMap report",
         "scanid": data.scanID,
+        "target": host,
         "toolname": "sqlmap",
         "tooltype": "SQL Injection scanning tool",
         "info": "SQL injection scanning tool"

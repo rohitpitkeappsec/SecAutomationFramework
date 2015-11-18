@@ -1,10 +1,12 @@
 var parse = function(data, callback){
+  var host = data.data[0].input;
   var lines = data.data[0].output.split('\n');
   //console.log(lines);
     var sendData = {
     "metadata": {
         "reportname": "NMAP OS report",
         "scanid": data.scanID,
+        "target": host,
         "toolname": "nmap OS",
         "tooltype": "OS detection and scanning tool",
         "info": "OS detection and scanning tool"

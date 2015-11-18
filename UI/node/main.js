@@ -431,7 +431,8 @@ app.post('/getreport', function(req, res) {
 var createHTMLstring = function(jsonData) {
   completeBody = "";
   completeBody = completeBody + "<h1 style='text-align:center'>" + jsonData.metadata.reportname + " </h1>";
-  completeBody = completeBody + "Scan ID : " + jsonData.metadata.scanid + "</br></br>";
+  completeBody = completeBody + "Scan ID : " + jsonData.metadata.scanid + "</br>";
+  completeBody = completeBody + "Target host : " + jsonData.metadata.target + "</br></br>";
   var tableBody = "";
   for (var i = 0; i < jsonData.reportdata.length; i++) {
     tableBody = tableBody + "<tr>";
