@@ -208,7 +208,11 @@ app.get('/gettoolinfo/:clientID/:toolID', function(req, res) {
         //the whole response has been recieved, so we just print it out here
         response.on('end', function() {
           console.log(str);
-          res.send(str);
+          if (str == "invalid session") {
+            res.send("error");
+          } else {
+            res.send(str);
+          }
         });
       }
       var request = http.request(options, callback);
