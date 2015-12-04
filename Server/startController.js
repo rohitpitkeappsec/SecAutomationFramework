@@ -16,6 +16,7 @@ var multer = require('multer');
 var session = require('express-session');
 var jwt = require('jsonwebtoken');
 var validator = require('validator');
+var crypto = require('crypto');
 var upload = multer({
   dest: './tools/'
 });
@@ -90,20 +91,33 @@ app.post('/authenticate', function(req, res) {
   userName = authData.userName;
   password = authData.password;
   //console.log(userName + ":" + password);
+  var hash = '';
+  db.getpasswordHash(userName, function(storedHash) {
+    if (storedHash != "error") {
+      //var jsonBody = JSON.parse(storedHash);
+      var salt = storedHash.salt;
+      var hashpass = storedHash.hash;
+      var algo = storedHash.algo; // get algorithm which was used by hashing 
+      password = salt + authData.password;
 
-  db.isValidCredential(userName, password, function(status) {
-    if (status == true) {
-      var token = jwt.sign(userName, app.get('superSecret'), {
-        expiresInMinutes: 1440 // expires in 24 hours
-      });
-      res.send({
-        "status": "Success",
-        "token": token
-      });
+      var newHash = crypto.createHash(algo).update(password).digest("hex");
+
+      if (newHash == hashpass) {
+        console.log("Password Match !");
+        var token = jwt.sign(userName, app.get('superSecret'), {
+          expiresInMinutes: 1440 // expires in 24 hours
+        });
+        res.send({
+          "status": "Success",
+          "token": token
+        });
+      } else {
+        res.send({
+          "status": "error"
+        });
+      }
     } else {
-      res.send({
-        "status": "Invalid"
-      });
+      res.send("error");
     }
   });
 });
@@ -603,13 +617,12 @@ app.post('/admin/adduser/', function(req, res) {
   var username = userData.username;
   var password = userData.password;
   var email = userData.email;
-
+  //-------------
   if ((username == null) || (!validator.isAlphanumeric(username)) || (!validator.isLength(username, 4, 16))) { //  Username validation
     console.log("Username invalid");
     res.status(404).send({
       "status": "Fail"
     });
-
   } else if ((email == null) || (!validator.isEmail(email))) { // Email validation
     console.log("Email invalid");
     res.status(404).send({
@@ -624,16 +637,37 @@ app.post('/admin/adduser/', function(req, res) {
     console.log("username: " + username + "email: " + email);
     db.isUser(userData.username, function(status) {
       if (status == false) {
-        db.addUserInDB(userData, function(status) {
-          if (status == "ok") {
-            console.log("User entered");
-            res.send({
-              "status": "Success"
-            });
+        //  Generate saltsize
+        var saltsize = 4;
+        crypto.pseudoRandomBytes(saltsize, function(error, data) { //
+          if (error) {
+            res.send("error");
           } else {
-            console.log("error inserting in db");
-            res.status(404).send({
-              "status": "Fail"
+            var salt = data.toString('hex');
+            password = salt + userData.password;
+            var sha512Password = crypto.createHash('sha512').update(password).digest("hex");
+            var authData = {
+              "username": username,
+              "password": '',
+              "email": email
+            };
+            authData.password = {
+              "hash": sha512Password,
+              "salt": salt,
+              "algo": "sha512"
+            };
+            db.addUserInDB(authData, function(status) {
+              if (status == "ok") {
+                console.log("User entered");
+                res.send({
+                  "status": "Success"
+                });
+              } else {
+                console.log("error inserting in db");
+                res.status(404).send({
+                  "status": "Fail"
+                });
+              }
             });
           }
         });
@@ -644,7 +678,7 @@ app.post('/admin/adduser/', function(req, res) {
         });
       }
     });
-  }
+  };
 });
 
 /*

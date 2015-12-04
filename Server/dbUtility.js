@@ -321,28 +321,32 @@ var closurestoreJSONReportInDB = function(reportObj, callback, db) {
 /*
  * used by /authenticate/
  */
-var isValidCredential = function(username, password, callback) {
+var getpasswordHash = function(username, callback) {
   var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
     safe: true
   });
   db.open(function(error) {
-    closureisValidCredential(username, password, callback, db);
+    closuregetpasswordHash(username, callback, db);
   });
 }
 
-var closureisValidCredential = function(username, password, callback, db) {
+var closuregetpasswordHash = function(username, callback, db) {
   db.collection("credentials", function(error, collection) {
     collection.find({
-      "username": username,
-      "password": password
+      "username": username
     }, function(error, cursor) {
+	if (error) {
+          db.close();
+          callback("error");
+        }
       cursor.toArray(function(errorarray, data) {
         if (data[0] == undefined) {
+           data = "error";
           db.close();
-          callback(false);
+          callback("error");
         } else {
           db.close();
-          callback(true);
+          callback(data[0].password);
         }
       });
     });
@@ -983,7 +987,7 @@ exports.updateHeartBeatStatus = updateHeartBeatStatus;
 exports.getToolData = getToolData;
 exports.getClientData = getClientData;
 exports.storeJSONReportInDB = storeJSONReportInDB;
-exports.isValidCredential = isValidCredential;
+exports.getpasswordHash = getpasswordHash;
 exports.getUserClientMapping = getUserClientMapping;
 exports.addToolInfo = addToolInfo;
 exports.addClientUserMapping = addClientUserMapping;
