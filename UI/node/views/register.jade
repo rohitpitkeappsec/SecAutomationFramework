@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra-Login
+    |     
+    link(rel='stylesheet', href='css/style.css', media='screen', type='text/css')
+  body
+    .container
+      #login-form
+        h3 Sign-up
+        |     
+        fieldset
+          form(action='/register', method='post')
+            table
+                tr
+                  td User ID
+                  td 
+                    input(type='text', name='username', required, minlength='4', maxlength='16' , value='')
+                  td 
+                tr
+                  td Password
+                  td 
+                    input(type='password', name='password', required, minlength='4', maxlength='16' , value='')
+                tr
+                  td Email
+                  td 
+                    input(type='text', name='email', required , value='')
+                tr
+                  td(colspan=2)
+                    input(type='submit', value='Register')
+            
+                
+      // end login-form

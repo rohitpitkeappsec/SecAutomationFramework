@@ -1019,6 +1019,28 @@ function updateServerDrivers() {
 }
 
 /*
+ * REST API
+ * GET
+ * Get First time log user
+ */
+app.get('/firstlogin/', function(req, res) {
+  console.log(req.sessionID);
+  // userName = req.params.username;
+  db.getUsers(function(users) {
+    if (users == false) {
+      res.send({
+        "status": "true"
+      });
+
+    } else {
+      res.send({
+        "status": "false"
+      });
+    }
+  });
+});
+
+/*
  * Function
  * This function executes when server comes up. It will fetch last value
  * assigned as scanID. It will store the last value of scanID in memory

@@ -60,9 +60,27 @@ app.get('/', function(req, res) {
   if (req.session.userAuth == true)
     res.redirect('/home');
   //    res.render("index.jade");
-  else
-    res.render('login.jade');
+  else { //Get first timelogin credentials
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/firstlogin/",
+      method: "GET",
+    }
+    request(options, function(error, response, body) {
+      console.log("Is this first login : " + body);
+      console.log("body of status:" + JSON.parse(body).status);
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (JSON.parse(body).status == "true") {
+        res.render('register.jade');
+        console.log("New user");
+      } else {
+        res.render('login.jade');
+      }
+    });
+  }
 });
+
 
 app.get('/css/:file', function(req, res) {
   //validate file name and path - dont allow dots and slashes in the file name
@@ -76,6 +94,54 @@ app.get('/js/:file', function(req, res) {
   res.sendFile('js/' + req.params.file, {
     root: path.join(__dirname, '')
   });
+});
+
+app.post('/register', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  var email = req.body.email;
+  console.log("Registering user : " + req.body.username);
+  // validate user name length, alphanumeric, password length and email
+  if ((username == null) || (password == null) || (email == null) || (!validator.isLength(username, 4, 16)) || (!validator.isAlphanumeric(username)) || (!validator.isLength(password, 4, 16)) || (!validator.isEmail(email))) {
+    console.log("Usrname, Password or email validation Fail");
+    console.log("Username must be 4 to 16 chars long, alpha numeric");
+    console.log("Password - 4 to 16 chars long");
+    console.log("Email - a valid email with id@domain format");
+    res.send("Invalid Username or Password Format");
+  } else {
+    var body = {
+      "username": req.body.username,
+      "password": req.body.password,
+      "email": req.body.email
+    };
+    var headers = {
+      'Content-Type': 'application/json'
+    }
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/adduser/",
+      headers: headers,
+      method: "POST",
+      body: JSON.stringify(body)
+    }
+    request(options, function(error, response, body) {
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      }
+      if (JSON.parse(body).status == "Fail") {
+        res.send("user exists or Invalid");
+      } else if (JSON.parse(body).status == "InvalidUser") {
+        res.send("Username format invalid");
+      } else if (JSON.parse(body).status == "InvalidEmail") {
+        res.send("Email format invalid");
+      } else {
+        res.render("registeruserstatus.jade", {
+
+        });
+      }
+    });
+  } // else - validation success
+
 });
 
 app.post('/loginauth', function(req, res) {
