@@ -6,7 +6,8 @@ var fs = require('fs');
 var path = require('path');
 var request = require("request");
 var session = require('express-session');
-var htmlToPdf = require('html-to-pdf');
+//var htmlToPdf = require('html-to-pdf');
+var pdf = require('html-pdf');
 var multer = require('multer');
 var FormData = require('form-data');
 var crypto = require('crypto');
@@ -502,9 +503,9 @@ app.post('/getreport', function(req, res) {
         // ##### DEBUG
 
         // hml file for collecting the multi-scanID report
-        var reportPath = __dirname + "/" + "temp.html";
+        var reportPath = __dirname + "/" + req.session.userName + "_temp.html";
         fs.writeFileSync(reportPath, ""); // create an empty file
-
+        console.log("Temp file created");
         requestCount = 0; // number of requests made to server - increment when making requests`
 
         // Determine the number of valid scanIDs - we will count this down in the callbacks
@@ -538,7 +539,7 @@ app.post('/getreport', function(req, res) {
             // ### DEBUG
             console.log("One more call back done: " + pendingCB + "still to go");
 
-            var reportPath = __dirname + "/" + "temp.html";
+            var reportPath = __dirname + "/" + req.session.userName + "_temp.html";
             if (error || (body == "error")) {
               console.log("Error: " + error + body);
               var err_msg = "<br> <br> Error occured processing the report for Scan ID " + jsonBody.scanid + "<br><br>";
@@ -564,25 +565,26 @@ app.post('/getreport', function(req, res) {
             // if all reports obtained, then generate pdf
 
             if (pendingCB == 0) { // all callbacks have been received
-              var reportPath = __dirname + "/" + "temp.html";
-              var multi_htmlreport = fs.readFileSync(reportPath);
-              multi_htmlreport = "<html> <body> " + multi_htmlreport + "</body> " + "</html>";
-
-              var reportfilenamepdf =
-                __dirname + "/" + "report_multi.pdf";
+              var FinalreportPath = __dirname + "/" + req.session.userName + "_temp.html";
+              var multi_htmlreport = fs.readFileSync(FinalreportPath);
+              multi_htmlreport = "<html> <body> " + multi_htmlreport + "</body> </html>";
+              //console.log(multi_htmlreport);
+              var reportfilenamepdf = "./" + req.session.userName + "_report_multi.pdf";
               // Now we create a single PDF file
-              htmlToPdf.convertHTMLString(
-                multi_htmlreport,
-                reportfilenamepdf,
+              var options = { format: 'Letter'};
+              pdf.create(multi_htmlreport, options).toFile(reportfilenamepdf,
                 function(error, success) {
                   if (error) {
                     console.log("unable to create pdf");
                     res.send("Error occured when creating pdf");
                   } else {
-                    res.sendFile(reportfilenamepdf);
+                    //console.log(reportfilenamepdf);
+                    //res.send(multi_htmlreport);
+                    res.sendFile(path.join(__dirname,'/') + reportfilenamepdf);
                     // ideally we should delete the temp.html and report_multi.pdf
                   }
                 });
+                //res.send(multi_htmlreport);
             } // if pendingCB == 0
           }); // report request
         } // for each scanid in the list requesting the report
