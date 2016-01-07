@@ -677,18 +677,18 @@ app.post('/tooltoclient', function(req, res) {
         var clientid = array[i];
         if (clientid <= 0 || !validator.isNumeric(clientid)) {
           console.log("Invalid client ID: " + clientid);
+          array.splice(i,1);
           --pendingCB; // one less call back with report expected
         }
       } // determine the number of valid scan IDs
+      if (!validator.isAlphanumeric(toolid)) {
+        res.send("Invalid toolID - no tool to push");
+      }
       errormsg = "";
 
       for (i = 0; i < numIds; i++) { //index is one less, so i<numScanIds
         // validate scan id
         var clientid = array[i];
-        if (clientid <= 0 || (!validator.isNumeric(clientid)) || (!validator.isAlphanumeric(toolid))) {
-          console.log("Invalid Client ID or Tool ID: " + clientid);
-          continue;
-        } // else
         var body = {
           "clientID": clientid,
           "toolID": toolid
