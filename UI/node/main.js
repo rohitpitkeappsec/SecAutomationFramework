@@ -452,69 +452,150 @@ app.get('/report', function(req, res) {
 });
 
 app.post('/getreport', function(req, res) {
-  if (req.session.userAuth == true) {
+  var pendingCB = -1; // global for checking when we are done with collecting all
+  var requestCount = 0; // global counter for number of report requests made
+  if (req.session.userAuth != true) {
+    res.redirect('/'); //unauthenticated session, so redirect to home page
+  } else {
+
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
     var csrfCookie = "";
 
+    // check for CSRF token
     for (var i = 0; i < cookieArray.length; i++) {
       var tempArr = cookieArray[i].split("csrfToken=");
       if (tempArr.length == 2) {
         csrfCookie = tempArr[1];
       }
     }
-    if (csrfBodyToken == csrfCookie) {
-      // validate scanid for undefined or null
-      var scanid = req.body.scanid;
-      console.log(scanid);
+    if (csrfBodyToken != csrfCookie) {
+      res.send("Invalid CSRF token"); // invalid CSRF token, return error
+    } else {
 
-      if ((scanid == null) || (scanid == "") || (!validator.isNumeric(scanid)) || (scanid <= 0)) {
+      // Session validated
+      // scanid for undefined or null ?
+      var scanid = req.body.scanid;
+      console.log("Scan Id: " + scanid);
+
+      if ((scanid == null) || (scanid == "")) {
         error = "ERROR: Missing or invalid scan ID ";
         res.send(error);
       } else {
-        var options = {
-          url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(req.body.scanid),
-          method: "GET"
+
+        // scan ID are not null or empty, so process each
+        // We may have multiple scan-ids with comma as separator
+        // validate each scan id for numeric and positive value
+
+        var array = scanid.toString().split(",");
+        var numScanIds = array.length;
+
+        // ##### DEBUG
+        console.log("Scan Id array length: " + array.length);
+        console.log("First Scan Id : " + array[0]);
+
+        if (validator.contains(scanid, ',')) {
+          console.log("Multiple Scan id split:" + scanid);
+        } else {
+          console.log("Single Scan id " + array[0]);
         }
-        request(options, function(error, response, body) {
-          if (error) {
-            console.log(error);
-            res.send("Some error occured");
-          } else if (body == "error") {
-            res.send("Some error occured on client");
-          } else if (body == "No report Available") {
-            res.send("No report Available");
-          } else {
-            console.log(body);
-            var jsonBody = JSON.parse(body);
+        // ##### DEBUG
 
-            if (jsonBody.status == "InvalidscanID") {
-              res.send("ScanID invalid");
-            }
+        // hml file for collecting the multi-scanID report
+        var reportPath = __dirname + "/" + "temp.html";
+        fs.writeFileSync(reportPath, ""); // create an empty file
 
-            if (jsonBody.err == true) {
-              res.send(body);
-            } else {
-              var html = createHTMLstring(jsonBody);
-              //console.log(html);
-              var reportfilename = "./report_" + req.session.userName + ".pdf"; // remove test.pdf
-              htmlToPdf.convertHTMLString(html, reportfilename, function(error, success) {
-                if (error) {
-                  console.log("unable to create pdf");
-                } else {
-                  res.sendFile(path.join(__dirname, '/') + reportfilename);
-                }
-              });
-            }
+        requestCount = 0; // number of requests made to server - increment when making requests`
+
+        // Determine the number of valid scanIDs - we will count this down in the callbacks
+        for (pendingCB = numScanIds, i = 0; i < numScanIds; i++) {
+          // validate scan id
+          var currScanId = array[i];
+          if (currScanId <= 0 || !validator.isNumeric(currScanId)) {
+            console.log("Invalid scan ID: " + currScanId);
+            array.splice(i,1);
+            --pendingCB; // one less call back with report expected
           }
-        });
-      }
-    } else {
-      res.send("Invalid CSRF token");
-    }
-  } else {
-    res.redirect('/');
-  }
+        } // determine the number of valid scan IDs
+
+
+        // for each (valid) scan id, obtain the parsed report
+        for (i = 0; i < numScanIds; i++) { //index is one less, so i<numScanIds
+          // validate scan id
+          var currScanId = array[i];
+          var options = {
+              url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(currScanId),
+              method: "GET"
+            } // options
+
+          // for each scan id, request the report
+
+          ++requestCount;
+          request(options, function(error, response, body) {
+
+            --pendingCB; // We are in the callback - decrement pending call back count
+
+            // ### DEBUG
+            console.log("One more call back done: " + pendingCB + "still to go");
+
+            var reportPath = __dirname + "/" + "temp.html";
+            if (error || (body == "error")) {
+              console.log("Error: " + error + body);
+              var err_msg = "<br> <br> Error occured processing the report for Scan ID " + jsonBody.scanid + "<br><br>";
+              fs.appendFileSync(reportPath, err_msg);
+
+            } else {
+              var jsonBody = JSON.parse(body);
+
+              if ((jsonBody.status == "InvalidscanID") || (jsonBody.status == "No report Available") || (jsonBody.err == true)) {
+
+                var err_msg = "<br> <br> Error : " + jsonBody.status + " for Scan ID " + jsonBody.scanid + "<br><br>";
+                fs.appendFileSync(reportPath, err_msg);
+
+              } else {
+
+                var htmltemp = createHTMLstring(jsonBody);
+                // we write this html to a file temporarily in local folder
+                fs.appendFileSync(reportPath, htmltemp);
+              } // report obtained
+
+            } // JSON report obtained, no error
+
+            // if all reports obtained, then generate pdf
+
+            if (pendingCB == 0) { // all callbacks have been received
+              var reportPath = __dirname + "/" + "temp.html";
+              var multi_htmlreport = fs.readFileSync(reportPath);
+              multi_htmlreport = "<html> <body> " + multi_htmlreport + "</body> " + "</html>";
+
+              var reportfilenamepdf =
+                __dirname + "/" + "report_multi.pdf";
+              // Now we create a single PDF file
+              htmlToPdf.convertHTMLString(
+                multi_htmlreport,
+                reportfilenamepdf,
+                function(error, success) {
+                  if (error) {
+                    console.log("unable to create pdf");
+                    res.send("Error occured when creating pdf");
+                  } else {
+                    res.sendFile(reportfilenamepdf);
+                    // ideally we should delete the temp.html and report_multi.pdf
+                  }
+                });
+            } // if pendingCB == 0
+          }); // report request
+        } // for each scanid in the list requesting the report
+
+        // at the end of the for loop, if we made no requests then all scanIDs are invalid
+        // need to return error
+        if (requestCount == 0) {
+          res.send("Invalid scan ID(s) - no report to generate");
+        }
+
+      } // not null or empty scanid field in the report request
+    } // CSRF token validated
+  } // authenticated session
 });
 
 var createHTMLstring = function(jsonData) {
@@ -527,12 +608,16 @@ var createHTMLstring = function(jsonData) {
     tableBody = tableBody + "<tr>";
     tableBody = tableBody + "<td style='border:medium black solid'>" + jsonData.reportdata[i].label + "</td>";
     tableBody = tableBody + "<td style='border:medium black solid'>" + jsonData.reportdata[i].desc + "</td>";
-    tableBody = tableBody + "<td style='border:medium black solid'>" + jsonData.reportdata[i].reportdata + "</td>";
+    if (jsonData.reportdata[i].reportdata != null) {
+      tableBody = tableBody + "<td style='border:medium black solid'>" + jsonData.reportdata[i].reportdata + "</td>";
+    }
     tableBody = tableBody + "</tr>"
   }
-  completeBody = completeBody + "<table style='width:60%; font-size:13px'>" + tableBody + "</table>";
-  completeBody = "<body>" + completeBody + "</body>";
-  completeBody = "<html>" + completeBody + "</html>";
+  completeBody = completeBody + "<table style='width:60%; font-size:13px'>" + tableBody + "</table>" + "<br> <br>";
+
+  //  completeBody = "<body>" + completeBody + "</body>";
+  //  completeBody = "<html>" + completeBody + "</html>";
+
   return completeBody;
 }
 
