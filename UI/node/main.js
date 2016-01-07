@@ -641,6 +641,9 @@ app.get('/pushtoclient', function(req, res) {
 });
 
 app.post('/tooltoclient', function(req, res) {
+  var pendingCB = -1;
+  var requestCount = 0;
+  var errormsg;
   if (req.session.userAuth == true) {
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
@@ -654,18 +657,38 @@ app.post('/tooltoclient', function(req, res) {
     }
     if (csrfBodyToken == csrfCookie) {
       var toolid = req.body.toolid;
-      var clientid = req.body.clientid;
+      var clientList = req.body.clientid;
+      var numIds = 1;
 
-      console.log("clientid = " + clientid);
+      console.log("clientid = " + clientList);
       console.log("toolid = " + toolid);
-      // Validate that toolid and clientid
-      // Either explicitly check for typeof clientid === 'undefined'
-      // or just check for null value, which includes check for undefined values
-      // toolid must be alphanumeric, clientid must be only numeric
-      if ((clientid == null) || (toolid == null) || (!validator.isNumeric(clientid)) || (!validator.isAlphanumeric(toolid)) || (clientid <= 0)) {
-        error = "ERROR: Missing or invalid client ID and/or tool name";
-        res.send(error);
-      } else {
+      console.log("All client ids :" + req.session.userClients);
+      if (clientList == "all") {
+        clientList = req.session.userClients;
+      }
+
+      var array = clientList.toString().split(",");
+      var numIds = array.length;
+      console.log("Multiple client id detected");
+
+      requestCount = 0; // number of requests made to server - increment when making requests`
+      for (pendingCB = numIds, i = 0; i < numIds; i++) {
+        // validate scan id
+        var clientid = array[i];
+        if (clientid <= 0 || !validator.isNumeric(clientid)) {
+          console.log("Invalid client ID: " + clientid);
+          --pendingCB; // one less call back with report expected
+        }
+      } // determine the number of valid scan IDs
+      errormsg = "";
+
+      for (i = 0; i < numIds; i++) { //index is one less, so i<numScanIds
+        // validate scan id
+        var clientid = array[i];
+        if (clientid <= 0 || (!validator.isNumeric(clientid)) || (!validator.isAlphanumeric(toolid))) {
+          console.log("Invalid Client ID or Tool ID: " + clientid);
+          continue;
+        } // else
         var body = {
           "clientID": clientid,
           "toolID": toolid
@@ -680,18 +703,34 @@ app.post('/tooltoclient', function(req, res) {
           method: "POST",
           body: JSON.stringify(body)
         }
+
+        ++requestCount;
+
         request(options, function(error, response, body) {
-          if (error) {
-            console.log(error);
-            res.send("Some error occured");
-          } else if (body == "error") {
-            res.send("Some error occured on client");
+
+          --pendingCB;
+          console.log("One more call back done to push tool to client : " + pendingCB + "still to go");
+
+          if (error || (body == "error")) {
+            console.log("ERROR :" + error);
+            errormsg = errormsg + ":ERROR:" + error;
+            console.log("Some call back error:" + errormsg);
+            //res.send("Some error occured");
           } else {
-            var toolList = JSON.parse(body).toolList;
-            res.render("pushstatus.jade", {
-              csrf: req.session.csrfCookie
-            });
+            if (pendingCB == 0) {
+              console.log("Tool push to all clients done ");
+
+              var toolList = JSON.parse(body).toolList;
+              res.render("pushstatus.jade", {
+                csrf: req.session.csrfCookie
+              });
+            }
           }
+
+          if (requestCount == 0) {
+            res.send("Invalid Client ID(s) - no tool to push");
+          }
+
         });
       }
     } else {
