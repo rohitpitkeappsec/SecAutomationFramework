@@ -6,7 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var request = require("request");
 var session = require('express-session');
-//var htmlToPdf = require('html-to-pdf');
 var pdf = require('html-pdf');
 var multer = require('multer');
 var FormData = require('form-data');
