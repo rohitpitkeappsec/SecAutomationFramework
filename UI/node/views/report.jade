@@ -6,10 +6,15 @@ html
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
     script.
       function isNumber(evt) {
-      var iKeyCode = (evt.which) ? evt.which : evt.keyCode
-      if (iKeyCode != 46 && iKeyCode > 31 && (iKeyCode < 48 || iKeyCode > 57))
-      return false;
-      return true;
+      var theEvent = evt || window.event;
+          var key = theEvent.keyCode || theEvent.which;
+          key = String.fromCharCode(key);
+          if (key.length == 0) return;
+          var regex = /^[0-9,\b]+$/;
+          if (!regex.test(key)) {
+              theEvent.returnValue = false;
+              if (theEvent.preventDefault) theEvent.preventDefault();
+          }
       }
   body
     .main
