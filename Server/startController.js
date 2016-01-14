@@ -895,6 +895,23 @@ app.get('/getallusers', function(req, res) {
 });
 
 /*
+ * REST API
+ * GET
+ * Get Summary of report
+ */
+app.get('/getsummary/', function(req, res) {
+  //
+  db.getallsummary(function(summaryData) {
+    if (summaryData == "error") {
+      res.status(404).send("error in action");
+    } else {
+      console.log("All body Summary Server :" + summaryData);
+      res.send(summaryData);
+    }
+  });
+});
+
+/*
  * Function
  * This function executes every 30 seconds. It will check timestamp of every
  * client and if client fails to send heartbeat by difference of 20 seconds,

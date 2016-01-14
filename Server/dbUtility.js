@@ -980,6 +980,44 @@ var closureisUser = function(username, callback, db) {
   });
 }
 
+/*
+ * used by /getsummary/
+ */
+var getallsummary = function(callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closuregetallsummary(callback, db);
+  });
+}
+
+var closuregetallsummary = function(callback, db) {
+  db.collection("toolReporting", function(error, collection) {
+    collection.find(function(error, cursor) {
+      cursor.toArray(function(errorarray, CBdata) {
+        var summaryData = [];
+        for (var i = 0; i < CBdata.length; i++) {
+          summaryData.push({
+            "SrNo": i + 1,
+            "scanID": CBdata[i].scanID,
+            "toolName": CBdata[i].toolNPM,
+            "target": CBdata[i].data[0].input,
+            "date": CBdata[i].date
+          });
+        }
+        if (error) {
+          db.close();
+          callback("error");
+        } else {
+          db.close();
+          callback(summaryData);
+        }
+      });
+    });
+  });
+}
+
 exports.performHeartBeat = performHeartBeat;
 exports.insertClientIDIntoDB = insertClientIDIntoDB;
 exports.getclientStatusData = getclientStatusData;
@@ -1010,3 +1048,4 @@ exports.getUsers = getUsers;
 exports.getAllToolsVersion = getAllToolsVersion;
 exports.updateToolVersion = updateToolVersion;
 exports.isUser = isUser;
+exports.getallsummary = getallsummary;

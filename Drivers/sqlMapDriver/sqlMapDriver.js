@@ -55,9 +55,10 @@ var runTool = function (scanID, userJSONData, callback){
         console.log(stdout);
         JSONoutput = stdout;
         message = "sqlmap scan result";
+        var currDate = Date();
         var JSONData = {"input":JSONinput, "output":JSONoutput, "message":message};
         data.push(JSONData);
-        var datasend = {"scanID":scanID,"toolNPM":"sqlMapDriver","data":data};
+        var datasend = {"scanID":scanID, "toolNPM":"sqlMapDriver", "date":currDate, "data":data};
         console.log(datasend);
         callback(datasend);  
       });  

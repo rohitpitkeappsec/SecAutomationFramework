@@ -1,0 +1,40 @@
+doctype html
+html
+  head
+    meta(http-equiv='refresh', content='10', charset='UTF-8')
+    title Rudra
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #home
+        h3
+          a(href='/home/') Home 
+          a(href='/summary/') Summary 
+          a(href='/report/') Report 
+          a(href='/tools/') Tools 
+          a(href='/settings/') Settings 
+          a(href='/logout/#{csrf}') Logout 
+        fieldset
+          center
+            br
+            form(action='/getreport', method='post', target='_blank')
+              input(type='hidden', name='csrf', value='#{csrf}')
+              table(border='1')
+                thead
+                  tr
+                    th SELECT
+                    th SCAN ID
+                    th TARGET
+                    th TOOL NAME
+                    th DATE 
+                tbody
+                  each item in summaryData
+                   tr
+                    td 
+                      input(type="checkbox", name='scanid', value='#{item.scanID}')
+                    td=item.scanID
+                    td #{item.target}
+                    td #{item.toolName}
+                    td #{item.date}
+               input(type='submit', value='Generate Report')
+

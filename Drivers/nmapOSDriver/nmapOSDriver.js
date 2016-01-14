@@ -40,9 +40,10 @@ var runTool = function (scanID, userJSONData, callback){
         JSONinput = userJSONData.IP.value;
         JSONoutput = stdout;
         message = "nmap scan result";
+        var currDate = Date();
         var JSONData = {"input":JSONinput, "output":JSONoutput, "message":message};
         data.push(JSONData);
-        var datasend = {"scanID":scanID,"toolNPM":"nmapOSDriver", "data":data}
+        var datasend = {"scanID":scanID,"toolNPM":"nmapOSDriver",  "date":currDate,"data":data}
         callback(datasend);
         console.log(datasend);  
       });  

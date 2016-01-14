@@ -1039,6 +1039,33 @@ app.post('/userclientmap', function(req, res) {
   }
 });
 
+app.get('/summary', function(req, res) {
+  if (req.session.userAuth == true) {
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getsummary/",
+      method: "GET"
+    }
+    request(options, function(error, response, body) {
+      console.log("All body Summary UI :" + body);
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        var summaryData = JSON.parse(body);
+        //	console.log("Parse data : " + summaryData);
+        res.render("summary.jade", {
+          summaryData: summaryData,
+          csrf: req.session.csrfCookie
+        });
+      }
+    });
+  } else {
+    res.redirect('/');
+  }
+});
+
 http.createServer(app).listen(app.get('port'), function(req, res) {
   console.log('Listing to port ' + config.port);
 });
