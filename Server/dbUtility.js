@@ -855,21 +855,22 @@ var closuregetClientSessionID = function(clientID, callback, db) {
 }
 
 /*
- * used by /getreport/:scanID
+ * used by /getreport/:username/:scanID
  */
-var getReport = function(scanID, callback) {
+var getReport = function(username, scanID, callback) {
   var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
     safe: true
   });
   db.open(function(error) {
-    closuregetReport(scanID, callback, db);
+    closuregetReport(username, scanID, callback, db);
   });
 }
 
-var closuregetReport = function(scanID, callback, db) {
+var closuregetReport = function(username, scanID, callback, db) {
   console.log(scanID);
   db.collection("toolReporting", function(error, collection) {
     collection.find({
+      "user": username,
       "scanID": scanID
     }, function(error, cursor) {
       cursor.toArray(function(errorarray, data) {
