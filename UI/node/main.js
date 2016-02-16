@@ -414,7 +414,7 @@ app.post('/runtool', function(req, res) {
         'Content-Type': 'application/json'
       }
       var options = {
-        url: "http://" + config.serverIP + ":" + config.serverPort + "/runtool/" + req.session.currentClient + "/" + req.session.currentTool,
+        url: "http://" + config.serverIP + ":" + config.serverPort + "/runtool/" + req.session.currentClient + "/" + req.session.currentTool + "/" + req.session.userName,
         headers: headers,
         method: "POST",
         body: JSON.stringify(runBody)
@@ -524,9 +524,9 @@ app.post('/getreport', function(req, res) {
           // validate scan id
           var currScanId = array[i];
           var options = {
-              url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(currScanId),
+              url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(req.session.userName) + "/" + encodeURIComponent(currScanId),
               method: "GET"
-            } // options
+            } // options// options
 
           // for each scan id, request the report
 
@@ -1042,11 +1042,11 @@ app.post('/userclientmap', function(req, res) {
 app.get('/summary', function(req, res) {
   if (req.session.userAuth == true) {
     var options = {
-      url: "http://" + config.serverIP + ":" + config.serverPort + "/getsummary/",
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getsummary/" + req.session.userName,
       method: "GET"
     }
     request(options, function(error, response, body) {
-      console.log("All body Summary UI :" + body);
+//     console.log("User is :" + req.session.userName);
       if (error) {
         console.log(error);
         res.send("Some error occured");

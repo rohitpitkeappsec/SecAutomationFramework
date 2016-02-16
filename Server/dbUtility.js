@@ -301,20 +301,44 @@ var storeJSONReportInDB = function(reportObj, callback) {
     closurestoreJSONReportInDB(reportObj, callback, db);
   });
 }
-
 var closurestoreJSONReportInDB = function(reportObj, callback, db) {
   db.collection("toolReporting", function(error, collection) {
-    collection.insert(reportObj, function(err, inserted) {
-      if (err) {
-        db.close();
-        console.log("Some error occured in db report entry");
-        callback("error");
-      } else {
-        db.close();
-        console.log("db report Inserted successfully");
-        callback("ok");
-      }
-    });
+    collection.findAndModify({
+        "scanID": reportObj.scanID
+      },
+      //    sort:{ /* second arg */
+      [
+        ['_id', 'asc']
+      ],
+      //    },
+      //      update: { /* third arg */ 
+      {
+        $set: {
+          "toolName": reportObj.toolNPM,
+          "toolNPM": reportObj.toolNPM,
+          "data": [{
+            "input": reportObj.data[0].input,
+            "output": reportObj.data[0].output,
+            "message": reportObj.data[0].message
+          }],
+          "clientID": reportObj.clientID
+        }
+      },
+      /* fourth arg */ //
+      {
+        upsert: true
+      },
+      function(err, inserted) {
+        if (err) {
+          db.close();
+          console.log("Some error occured in client db insertion");
+          callback();
+        } else {
+          console.log("client entered successfully");
+          db.close();
+          callback("ok");
+        }
+      });
   });
 }
 
@@ -980,40 +1004,106 @@ var closureisUser = function(username, callback, db) {
   });
 }
 
-/*
- * used by /getsummary/
- */
-var getallsummary = function(callback) {
+var getallsummary = function(username, callback) {
   var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
     safe: true
   });
   db.open(function(error) {
-    closuregetallsummary(callback, db);
+    closuregetallsummary(username, callback, db);
   });
 }
 
-var closuregetallsummary = function(callback, db) {
+var closuregetallsummary = function(username, callback, db) {
   db.collection("toolReporting", function(error, collection) {
-    collection.find(function(error, cursor) {
-      cursor.toArray(function(errorarray, CBdata) {
-        var summaryData = [];
-        for (var i = 0; i < CBdata.length; i++) {
-          summaryData.push({
-            "SrNo": i + 1,
-            "scanID": CBdata[i].scanID,
-            "toolName": CBdata[i].toolNPM,
-            "target": CBdata[i].data[0].input,
-            "date": CBdata[i].date
-          });
-        }
-        if (error) {
-          db.close();
-          callback("error");
-        } else {
-          db.close();
-          callback(summaryData);
-        }
+    if (username == "admin") {
+      collection.find(function(error, cursor) {
+        cursor.toArray(function(errorarray, CBdata) {
+          var summaryData = [];
+          for (var i = 0; i < CBdata.length; i++) {
+            summaryData.push({
+              "SrNo": i + 1,
+              "scanID": CBdata[i].scanID,
+              "toolName": CBdata[i].toolNPM,
+              "target": CBdata[i].data[0].input,
+              "date": CBdata[i].date
+            });
+          }
+          if (error) {
+            db.close();
+            callback("error");
+          } else {
+            db.close();
+            callback(summaryData);
+          }
+        });
       });
+    } else {
+      collection.find({
+        "user": username
+      }, function(error, cursor) {
+        cursor.toArray(function(errorarray, CBdata) {
+          var summaryData = [];
+          for (var i = 0; i < CBdata.length; i++) {
+            summaryData.push({
+              "SrNo": i + 1,
+              "scanID": CBdata[i].scanID,
+              "toolName": CBdata[i].toolNPM,
+              "target": CBdata[i].data[0].input,
+              "date": CBdata[i].date
+            });
+          }
+          if (error) {
+            db.close();
+            callback("error");
+          } else {
+            db.close();
+            callback(summaryData);
+          }
+        });
+      });
+    }
+  });
+}
+
+/*
+ * used by /insertscanID/:scanID/:username 
+ */
+var insertscanID = function(scanID, username, callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closureinsertscanID(scanID, username, callback, db);
+  });
+}
+
+var closureinsertscanID = function(scanID, username, callback, db) {
+  var currDate = Date();
+  var ID = scanID.toString();
+  var reportData = {
+    "scanID": ID,
+    "toolNPM": 'Dummy',
+    "toolName": 'Dummy',
+    "user": username,
+    "date": currDate,
+    "data": [{
+      "input": 'Dummy',
+      "output": 'Dummy',
+      "message": 'Dummy'
+    }],
+    "clientID": 'Dummy'
+  };
+  db.collection("toolReporting", function(error, collection) {
+    collection.insert(reportData, function(err, inserted) {
+      if (err) {
+        db.close();
+        console.log("Some error occured ");
+        callback(false);
+      } else {
+        db.close();
+        callback(true);
+        console.log("Report Initial data Inserted successfully");
+      }
     });
   });
 }
@@ -1049,3 +1139,4 @@ exports.getAllToolsVersion = getAllToolsVersion;
 exports.updateToolVersion = updateToolVersion;
 exports.isUser = isUser;
 exports.getallsummary = getallsummary;
+exports.insertscanID = insertscanID;

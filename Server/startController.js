@@ -294,48 +294,52 @@ app.get('/deleteclienttool/:clientID/:toolID', function(req, res) {
  * URL to run tool on specific client.
  * Data to run tool is in json format in post body.
  */
-app.post('/runtool/:clientID/:toolID', function(req, res) {
+app.post('/runtool/:clientID/:toolID/:userName', function(req, res) {
   var clientID = req.params.clientID;
   var toolID = req.params.toolID;
+  var username = req.params.userName;
   var runInfo = req.body;
   scanID = parseInt(scanID) + 1;
   console.log(runInfo);
   db.getClientSessionID(clientID, function(sessionID) {
     db.getClientData(clientID, function(clientData) {
-      var options = {
-        host: clientData.clientIP,
-        port: clientData.clientPort,
-        path: '/tool/runtool/' + toolID + '/' + scanID + '/' + sessionID,
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json'
-        }
-      };
-      var request = http.request(options, function(runRes) {
-        runRes.setEncoding('utf8');
-        runRes.on('data', function(runStatus) {
-          db.updateLastScanId(scanID, function(updateStatus) {
-            if (updateStatus == "ok") {
-              if (runStatus == "ok") {
-                res.send({
-                  "scanID": scanID
-                });
+      console.log("Server got username :" + username);
+      db.insertscanID(scanID, username, function(scanidStaus) { // Call insertscanID in db call for initial credential insert
+        var options = {
+          host: clientData.clientIP,
+          port: clientData.clientPort,
+          path: '/tool/runtool/' + toolID + '/' + scanID + '/' + sessionID,
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          }
+        };
+        var request = http.request(options, function(runRes) {
+          runRes.setEncoding('utf8');
+          runRes.on('data', function(runStatus) {
+            db.updateLastScanId(scanID, function(updateStatus) {
+              if (updateStatus == "ok") {
+                if (runStatus == "ok") {
+                  res.send({
+                    "scanID": scanID
+                  });
+                } else {
+                  res.status(404).send("error in action");
+                }
               } else {
-                res.status(404).send("error in action");
+                console.log("error updating scanID last value");
+                res.status(404).send("error updating scanID last value");
               }
-            } else {
-              console.log("error updating scanID last value");
-              res.status(404).send("error updating scanID last value");
-            }
+            });
           });
         });
-      });
-      request.write(JSON.stringify(runInfo));
-      request.on('error', function(e) {
-        console.log(e.message);
-        res.send("error");
-      });
-      request.end();
+        request.write(JSON.stringify(runInfo));
+        request.on('error', function(e) {
+          console.log(e.message);
+          res.send("error");
+        });
+        request.end();
+      }); // insertscanID completed
     });
   });
 });
@@ -782,8 +786,10 @@ app.get('/admin/deleteservertool/:toolID', function(req, res) {
  * GET
  * Get scan report from server submitted by client
  */
-app.get('/getreport/:scanID', function(req, res) {
+app.get('/getreport/:userName/:scanID', function(req, res) {
+  var username = req.params.userName;
   var reportScanID = req.params.scanID;
+  console.log("Server getReport Username : " + username);
   if (reportScanID == '') { //  ScanID validation
     console.log("ScanID Empty");
     res.status(404).send({
@@ -796,9 +802,12 @@ app.get('/getreport/:scanID', function(req, res) {
     });
 
   } else {
-    db.getReport(reportScanID, function(reportData) {
+    db.getReport(username, reportScanID, function(reportData) {
       if (reportData == false) {
-        res.send("No report Available");
+        res.status(404).send({
+          "status": "No report Available",
+          "scanid": reportScanID
+        });
       } else {
         try {
           var parser = require('./tools/' + reportData.toolNPM + '/' + reportData.toolNPM + 'Parser.js');
@@ -899,9 +908,10 @@ app.get('/getallusers', function(req, res) {
  * GET
  * Get Summary of report
  */
-app.get('/getsummary/', function(req, res) {
-  //
-  db.getallsummary(function(summaryData) {
+app.get('/getsummary/:userName', function(req, res) {
+  var username = req.params.userName;
+  console.log("Server username:" + username);
+  db.getallsummary(username, function(summaryData) {
     if (summaryData == "error") {
       res.status(404).send("error in action");
     } else {
