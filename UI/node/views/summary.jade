@@ -5,6 +5,17 @@ html
     title Rudra
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
     script(type='text/javascript').
+      function isNumber(evt) {
+      var theEvent = evt || window.event;
+          var key = theEvent.keyCode || theEvent.which;
+          key = String.fromCharCode(key);
+          if (key.length == 0) return;
+          var regex = /^[0-9,\b]+$/;
+          if (!regex.test(key)) {
+              theEvent.returnValue = false;
+              if (theEvent.preventDefault) theEvent.preventDefault();
+          }
+      }
       function Pager(tableName, itemsPerPage) {
       this.tableName = tableName;
       this.itemsPerPage = itemsPerPage;
@@ -83,7 +94,7 @@ html
                 tr
                   td Enter Scan ID
                   td
-                    input(type='text', name='scanid', onkeypress='javascript:return isNumber (event)', required)
+                    input(type='text', name='scanid', onkeypress='javascript:return isNumber (event)')
                   td(width='40%')
                     input(type='submit', value='Get Report')
               br

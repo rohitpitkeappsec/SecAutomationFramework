@@ -507,11 +507,7 @@ app.post('/getreport', function(req, res) {
         console.log("Scan Id array length: " + array.length);
         console.log("First Scan Id : " + array[0]);
 
-        if (validator.contains(scanid, ',')) {
-          console.log("Multiple Scan id split:" + scanid);
-        } else {
-          console.log("Single Scan id " + array[0]);
-        }
+
         // ##### DEBUG
 
         // hml file for collecting the multi-scanID report
@@ -524,18 +520,22 @@ app.post('/getreport', function(req, res) {
         for (pendingCB = numScanIds, i = 0; i < numScanIds; i++) {
           // validate scan id
           var currScanId = array[i];
-          if (currScanId <= 0 || !validator.isNumeric(currScanId)) {
+          if ((currScanId == null) || (currScanId == "") || (currScanId === undefined) || currScanId <= 0 || (!validator.isNumeric(currScanId))) {
             console.log("Invalid scan ID: " + currScanId);
-            array.splice(i, 1);
             --pendingCB; // one less call back with report expected
           }
         } // determine the number of valid scan IDs
+        console.log("Number of callback PendingCB:" + pendingCB);
 
 
         // for each (valid) scan id, obtain the parsed report
         for (i = 0; i < numScanIds; i++) { //index is one less, so i<numScanIds
           // validate scan id
           var currScanId = array[i];
+          if ((currScanId == null) || (currScanId == "") || (currScanId === undefined) || currScanId <= 0 || (!validator.isNumeric(currScanId))) {
+            //console.log("Invalid scan ID: " + currScanId);
+            continue;
+          } // else valid scan id
           var options = {
               url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(req.session.userName) + "/" + encodeURIComponent(currScanId),
               method: "GET"
