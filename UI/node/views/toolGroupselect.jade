@@ -3,7 +3,7 @@ html
   head
     meta(charset='UTF-8')
     |   
-    title Rudra
+    title Rudra Push Tool
     |     
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
   body
@@ -19,27 +19,29 @@ html
         |     
         fieldset
           center
-            span User Details
+            span Push ToolGroup
             br
             br
-            form(action='/adduser', method='post')
+            form(action='/tooltoclient', method='post')
               input(type='hidden', name='csrf', value='#{csrf}')
               table
                 tr
-                  td User ID
-                  td 
-                    input(type='text', name='userid', required, minlength='4', maxlength='16')
+                  td Select Client
+                  td
+                    select(name='clientid')
+                     option(value='all') All
+                      each client in clientid
+                        option(value='#{client}') #{client}
                 tr
-                  td Password
-                  td 
-                    input(type='password', name='password', required, minlength='4', maxlength='16')
-                tr
-                  td Email
-                  td 
-                    input(type='text', name='email', required)
+                  td Select Tool
+                  td
+                    select(name='toolid')
+                      each tool in toollist
+                        //#{tool}
+                        option(value='#{tool.toolGroupName}/#{tool.toolList}') #{tool.toolGroupName}
                 tr
                   td(colspan=2)
-                    input(type='submit', value='Add User')
+                    input(type='submit', value='Push ToolGroup')
              br
       // end login-form
  

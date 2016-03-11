@@ -1,0 +1,46 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra ToolGroup Options
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #configure
+        h3 
+          a(href="/home/") Home 
+          a(href="/summary/") Summary 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span New Custom Tool Group
+            br
+            br
+            form(action='/createGroup', method='post')
+              input(type='hidden', value='#{csrf}', name='csrf')
+              table
+                tr
+                  td Tool Group Name
+                  td 
+                    input(type='text', name='ToolGroupName', required, minlength='4', value='')
+              br
+              table(style='display:inline')
+                thead
+                 th Select Tools
+                   tbody
+                     each item in toolslist
+                      tr
+                       td 
+                         input(type="checkbox", name='toolID', value='#{item.toolID}')
+                       td #{item.toolID}
+              br
+
+              input(type='submit', value='Create')
+     // end login-form
+ 

@@ -411,13 +411,29 @@ app.post('/admin/pushtoolclient/', function(req, res) {
 app.get('/getclients/:username', function(req, res) {
   console.log(req.sessionID);
   userName = req.params.username;
+
   db.getUserClientMapping(userName, function(status) {
-    if (status == false) {
-      res.send("No clients");
-    } else {
-      res.send(status);
-    }
-  });
+    db.getserverTools(function(data) {
+      db.getToolGroup(function(toolname) {
+        console.log("clientid:" + status)
+        if (status == false) {
+          status = "No clients";
+        }
+        if (data == "error") {
+          data = "No Tools";
+        }
+        if (toolname == "error") {
+          toolname = "No toolGroup";
+        }
+        res.send({
+          "status": status,
+          "data": data,
+          "toolGroup": toolname
+        });
+
+      }); // get Tool Group name list 
+    }); // server tools end 
+  }); // getUserclientmappimg ends
 });
 
 /*
@@ -1058,10 +1074,108 @@ app.get('/firstlogin/', function(req, res) {
       res.send({
         "status": "true"
       });
-
     } else {
       res.send({
         "status": "false"
+      });
+    }
+  });
+});
+
+/*
+ * REST API
+ * GET
+ * Get associated tools on server
+ */
+app.get('/getTools/', function(req, res) {
+  db.getserverTools(function(data) {
+    // console.log("Tools on Server :" + data);
+    db.getToolGroup(function(toolgroup) {
+      if (data == "error") {
+        data = "No Tools";
+      }
+      if (toolgroup == "error") {
+        toolgroup = "No ToolGroup";
+      } else {
+        res.send({
+          "data": data,
+          "toolgroup": toolgroup
+        });
+      }
+    }); // server toolGroup end
+  }); // server tools end
+});
+
+/*
+ * REST API
+ * GET
+ * Get associated toolgroups on server
+ */
+app.get('/getalltoolGroup/', function(req, res) {
+  db.getToolGroup(function(toolgroup) {
+    if (toolgroup == "error") {
+      toolgroup = "No ToolGroup";
+    } else {
+      res.send(toolgroup);
+    }
+  }); // server toolGroup end
+});
+
+/*
+ * REST API
+ * GET
+ * Get ToolGroup for specified toolgroupname
+ */
+app.get('/gettoolgroup/:toolgroupname', function(req, res) {
+  var toolgroupname = req.params.toolgroupname;
+  db.gettoolgroupname(toolgroupname, function(toolList) {
+    // console.log("Tool list server:" + toolList);
+    if (toolList == "error") {
+      toolList = "No ToolGroup";
+    } else {
+      res.send(toolList);
+    }
+  });
+});
+
+/*
+ * REST API
+ * POST
+ * CREATE TOOL GROUP IN SERVER DB
+ */
+app.post('/createToolGroup', function(req, res) {
+  var Data = req.body;
+  var toolgroupname = Data.ToolGroupName;
+  var toollist = Data.toolnameList;
+  //console.log("Body:" + req.body);
+  // console.log("Server tool post:" + req.body.toolnameList);
+  //console.log("Server tool post:" + req.body.toolnameList[1]);
+  db.createTGN(toolgroupname, toollist, function(status) {
+    if (status = "error") {
+      res.status(404).send("error in action");
+    } else {
+      res.send({
+        "status": "success"
+      });
+    }
+  });
+});
+
+/*
+ * REST API
+ * POST
+ * Put clientlist to toolgroupname for select launcher
+ */
+app.post('/admin/pushclienttoolGroup/', function(req, res) {
+  clientList = req.body.clientList;
+  ToolGroupName = req.body.ToolGroupName;
+  console.log("Client list in server toolgroup:" + clientList);
+  console.log("ToolGroupName :" + ToolGroupName);
+  db.addClientlistGroup(ToolGroupName, clientList, function(status) {
+    if (status == true) {
+      console.log("ClientList inserted in ToolGroup");
+      res.send({
+        "status": "Success"
       });
     }
   });

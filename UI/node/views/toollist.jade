@@ -8,7 +8,7 @@ html
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
   body
     .main
-      #home
+      #runtool
         h3 
           a(href="/home/") Home 
           a(href="/summary/") Summary 
@@ -22,9 +22,17 @@ html
             span Tool List
             br
             br
-            each item in tools
-             a(href="/gettoolinfo/#{client}/#{item}") #{item} &nbsp;&nbsp; &nbsp; &nbsp;    
-             a(href="/deleteclienttool/#{client}/#{item}") Delete 
-             br
+           table
+              each item in tools
+               tr
+                td
+                  a(href="/gettoolinfo/#{client}/#{item}") #{item}
+                td 
+                  input(type="checkbox", name='scanid', value='#{client}/#{item}')
+
+           a(href="/gettoolinfo/#{client}/#{item}") #{item} &nbsp;&nbsp; &nbsp; &nbsp;
+           input(type='submit', value='Delete Tools')    
+           a(href="/deleteclienttool/#{client}/#{item}")  
+           br
       // end login-form
  

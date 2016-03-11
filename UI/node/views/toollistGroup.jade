@@ -1,0 +1,42 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra Tool Management
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #tool
+        h3 
+          a(href="/home/") Home 
+          a(href="/summary/") Summary 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          span Configure  #{toolgroupname} 
+            br
+            br
+          table(style='display:inline')
+            thead
+              th Tools Configured
+            tbody
+               each item in tools
+                 tr
+                  td #{item}
+
+          table(style='display:inline')
+              tr
+                td(width='600px')
+                  input(type='submit', value='Back', onclick='window.location.href="/home"')
+              tr
+                td 
+                  input(type='submit', value='Next', onclick='window.location.href="/toolgroupconfigure"')
+
+          br       
+      // end login-form
+ 

@@ -8,7 +8,7 @@ html
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
   body
     .main
-      #home
+      #tool
         h3 
           a(href="/home/") Home 
           a(href="/summary/") Summary 
@@ -18,12 +18,34 @@ html
           a(href="/logout/#{csrf}") Logout
         |     
         fieldset
-          center
-            span Tool Management
+          span Tool Management
             br
             br
-            input(type='submit', value='Upload To Server', onclick='window.location.href="/uploadtoserver"')
-            br
-            input(type='submit', value='Push to Client', onclick='window.location.href="/pushtoclient"')
+          table(style='display:inline')
+            thead
+              th Server Tools
+            tbody
+               each item in toolslist
+                 tr
+                  td #{item.toolID}
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          table(style='display:inline')
+            thead
+              th Server  ToolGroups
+            tbody
+               each item in toolgroup
+                 tr
+                  td #{item.toolGroupName}
+          table(style='display:inline')
+              tr
+                td(width='600px')
+                  input(type='submit', value='Upload To Server', onclick='window.location.href="/uploadtoserver"')
+              tr
+                td 
+                  input(type='submit', value='Push Tool', onclick='window.location.href="/pushtoclient"')
+              tr
+                td 
+                  input(type='submit', value='Push TooolGroup', onclick='window.location.href="/pushtoolgroup"')
+          br       
       // end login-form
  

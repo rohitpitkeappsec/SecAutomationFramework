@@ -8,7 +8,7 @@ html
     link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
   body
     .main
-      #home
+      #setting
         h3 
           a(href="/home/") Home 
           a(href="/summary/") Summary 
@@ -22,10 +22,30 @@ html
             span Settings
             br
             br
-            input(type='submit', value='Add User', onclick='window.location.href="/adduserui"')
-            br
-            input(type='submit', value='User Client Map', onclick='window.location.href="/userclientui"')
-            br
+          table(style='display:inline')
+            thead
+              th Username List
+            tbody
+               each item in userid
+                 tr
+                  td #{item}
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          table(style='display:inline')
+              tr
+                td(width='455px')
+                  input(type='submit', value='Add User', onclick='window.location.href="/adduserui"')
+              tr
+                td 
+                  input(type='submit', value='Remove User', onclick='window.location.href="#"')
+              tr
+                td 
+                  input(type='submit', value='Reset Password', onclick='window.location.href="#"')
+              tr
+                td 
+                  input(type='submit', value='User Authorization', onclick='window.location.href="/userclientui"')
+          br       
+            
+
             
       // end login-form
  

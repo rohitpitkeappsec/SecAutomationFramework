@@ -1,0 +1,47 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    |   
+    title Rudra Tool Run Options
+    |     
+    link(rel='stylesheet', href='/css/style.css', media='screen', type='text/css')
+  body
+    .main
+      #configure
+        h3 
+          a(href="/home/") Home 
+          a(href="/summary/") Summary 
+          a(href="/report/") Report 
+          a(href="/tools/") Tools 
+          a(href="/settings/") Settings 
+          a(href="/logout/#{csrf}") Logout
+        |     
+        fieldset
+          center
+            span Configure ToolGroup
+            br
+            br
+            form(action='/toolconfigure', method='post')
+              input(type='hidden', value='#{csrf}', name='csrf')
+              table
+                tr
+                  td Company Name(*)
+                  td 
+                    input(type='text', name='company_name', required, minlength='4', value='')
+
+                  td Department Name
+                  td 
+                    input(type='text', name='dept_name', required, minlength='4', value='')
+                tr
+                  td Launcher to Use 
+                  td 
+                    input(type='text', name='launcher', required, minlength='4', value='')
+                  td Tag
+                  td 
+                    input(type='text', name='tag', required, minlength='4', value='')
+              
+              
+              input(type='submit', value='Next')
+      // end login-form
+ 

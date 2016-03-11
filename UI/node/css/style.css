@@ -191,12 +191,20 @@ input[type="submit"] {
 
 #home table {
   width: 80%;
+  border-collapse: collapse;
 }
 
-#home td {
+#home td, th {
   text-align: center;
-  padding: 6px;
+  padding: 8px;
 }
+
+#home tr:nth-child(even){background-color: #f2f2f2}
+
+#home th {
+    background-color: #708890;
+    color: white;
+} 
 
 #home input[type="submit"] {
   background: #1dabb8;
@@ -213,6 +221,336 @@ input[type="submit"] {
   margin-top: 16px;
 }
 /* ---------- HOME END---------- */
+
+
+/* ---------- Runtool Start ---------- */
+#runtool {
+  width: 80%;
+}
+
+#runtool h3 {
+  background-color: #282830;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+  font-size: 14px;
+  padding: 20px;
+  text-transform: uppercase;
+  word-spacing: 80px;
+}
+
+#runtool fieldset {
+  background: #fff;
+  border-radius: 0 0 5px 5px;
+  padding: 20px;
+}
+
+#runtool fieldset span {
+  font-size: 25px;
+}
+
+#runtool input {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#runtool select {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#runtool table {
+  width: 80%;
+}
+
+
+
+#runtool input[type="submit"] {
+  background: #1dabb8;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 20px;
+  padding: 12px 20px;
+  width: 40%
+}
+
+#runtool footer {
+  font-size: 12px;
+  margin-top: 16px;
+}
+/* ---------- Runtool END---------- */
+/* ---------- configure Start ---------- */
+#configure {
+  width: 80%;
+}
+
+#configure h3 {
+  background-color: #282830;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+  font-size: 14px;
+  padding: 20px;
+  text-transform: uppercase;
+  word-spacing: 80px;
+}
+
+#configure fieldset {
+  background: #fff;
+  border-radius: 0 0 5px 5px;
+  padding: 20px;
+}
+
+#configure fieldset span {
+  font-size: 25px;
+}
+
+#configure input {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#configure select {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#configure table {
+  width: 80%;
+}
+
+#configure td {
+  text-align: center;
+  padding: 6px;
+}
+
+#configure input[type="submit"] {
+  background: #1dabb8;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 20px;
+  padding: 12px 20px;
+  width: 40%
+}
+
+#configure footer {
+  font-size: 12px;
+  margin-top: 16px;
+}
+/* ---------- configure END---------- */
+
+
+
+/* ---------- Tools Start ---------- */
+#tool {
+  width: 80%;
+}
+
+#tool h3 {
+  background-color: #282830;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+  font-size: 14px;
+  padding: 20px;
+  text-transform: uppercase;
+  word-spacing: 80px;
+}
+
+#tool fieldset {
+  background: #fff;
+  border-radius: 0 0 5px 5px;
+  padding: 20px;
+}
+
+#tool fieldset span {
+  font-size: 25px;
+}
+
+#home input {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#tool select {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#tool table {
+  width: 100%;
+}
+
+
+#tool td {
+  text-align: center;
+  padding: 6px;
+}
+#tool th {
+  font-family: "Trebuchet MS", Arial, Verdana;
+  font-size: 16px;
+  padding: 6px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #CDC1A7;
+  background-color: #708890;
+  color: white;
+}
+
+#tool input[type="submit"] {
+  background: #1dabb8;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 20px;
+  padding: 12px 20px;
+  width: 40%
+}
+
+#tool footer {
+  font-size: 12px;
+  margin-top: 16px;
+}
+/* ---------- Tools END---------- */
+
+/* ---------- Setting Start ---------- */
+#setting {
+  width: 80%;
+}
+
+#setting h3 {
+  background-color: #282830;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+  font-size: 14px;
+  padding: 20px;
+  text-transform: uppercase;
+  word-spacing: 80px;
+}
+
+#setting fieldset {
+  background: #fff;
+  border-radius: 0 0 5px 5px;
+  padding: 20px;
+}
+
+#setting fieldset span {
+  font-size: 25px;
+}
+
+#setting input {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#setting select {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#setting table {
+  width: 40%;
+}
+
+#setting td {
+  text-align: center;
+  padding: 5px;
+}
+#setting th {
+  font-family: "Trebuchet MS", Arial, Verdana;
+  font-size: 16px;
+  padding: 5px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #CDC1A7;
+  background-color: #708890;
+  color: white;
+}
+
+#setting input[type="submit"] {
+  background: #1dabb8;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 15px;
+  padding: 5px 20px;
+  width: 40%
+}
+
+#setting footer {
+  font-size: 12px;
+  margin-top: 16px;
+}
+/* ---------- Setting END---------- */
+
+/* ---------- toolselect Start ---------- */
+#toolselect {
+  width: 80%;
+}
+
+#toolselect h3 {
+  background-color: #282830;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+  font-size: 14px;
+  padding: 20px;
+  text-transform: uppercase;
+  word-spacing: 80px;
+}
+
+#toolselect fieldset {
+  background: #fff;
+  border-radius: 0 0 5px 5px;
+  padding: 20px;
+}
+
+#toolselect fieldset span {
+  font-size: 25px;
+}
+
+#toolselect input {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#toolselect select {
+  border: 1px solid #dcdcdc;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+#toolselect table {
+  width: 80%;
+}
+
+#toolselect td {
+  text-align: center;
+  padding: 6px;
+}
+
+#toolselect input[type="submit"] {
+  background: #1dabb8;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 20px;
+  padding: 12px 20px;
+  width: 40%
+}
+
+#toolselect footer {
+  font-size: 12px;
+  margin-top: 16px;
+}
+/* ---------- toolselect END---------- */
 
 
 .info {

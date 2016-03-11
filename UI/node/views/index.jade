@@ -18,15 +18,42 @@ html
           a(href="/logout/#{csrf}") Logout 
         |     
         fieldset
-          center
-            span Client List
-            br
-            br
-            each item in dataclient
-             if item == "No Clients"
-              | No Clients
-             else
-               a(href="/gettools/" + item) #{item}
-             br
+          form(action='/', method='post', target='_blank')
+            input(type='hidden', name='csrf', value='#{csrf}')
+          br
+          br
+          table(style='display:inline')
+            thead
+              th Tools
+            tbody
+               each item in toolslist
+                 tr
+                  td #{item.toolID}
+          span
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          table(style='display:inline')
+            thead
+              tr
+                th Launcher
+            tbody
+               each item in dataclient
+                 tr
+                  td             
+                    if item == "No Clients"
+                     | No Clients
+                    else
+                      a(href="/gettools/" + item) #{item}
+          span
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          table(style='display:inline')
+            thead
+              th Tool Group 
+            tbody
+               each item in toolGroup
+                 tr
+                  td 
+                    a(href="/gettoolgroup/#{item.toolGroupName}") #{item.toolGroupName}
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          a(href="/custom") >> Create ToolGroup       
       // end login-form
  

@@ -239,16 +239,27 @@ app.get('/home/', function(req, res) {
       } else if (body == "error") {
         res.send("Some error occured on client");
       } else {
+
+        // console.log("BODY is :" + body)
+        var clientID = JSON.parse(body).status;
+        var tools = JSON.parse(body).data;
+        var toolGroup = JSON.parse(body).toolGroup;
+
+
+        console.log("Client id:" + clientID);
+        console.log("Tools are :" + tools);
         var jsonBody = {};
-        if (body == "No clients") {
+        if (clientID == "No clients") {
           jsonBody.clientID = ['No Clients'];
         } else {
-          jsonBody = JSON.parse(body);
+          jsonBody = JSON.parse(body).status;
         }
-        var clientID = jsonBody.clientID;
+        var clientid = jsonBody.clientID;
         req.session.userClients = jsonBody.clientID;
         res.render("index.jade", {
-          dataclient: clientID,
+          dataclient: clientid,
+          toolslist: tools,
+          toolGroup: toolGroup,
           csrf: req.session.csrfCookie
         });
       }
@@ -304,6 +315,7 @@ app.get('/gettools/:clientid', function(req, res) {
         } else {
           var jsonBody = JSON.parse(body)
           var toolList = jsonBody.toolList;
+          console.log("Tool list is :" + toolList);
           res.render("toollist.jade", {
             tools: toolList,
             client: req.params.clientid,
@@ -342,12 +354,13 @@ app.get('/gettoolinfo/:clientid/:toolid', function(req, res) {
         } else {
           var jsonBody = JSON.parse(body);
           var keys = Object.keys(jsonBody);
-          console.log(keys);
+          console.log("Keys are :" + keys);
           req.session.runBody = jsonBody;
           req.session.currentClient = req.params.clientid;
           req.session.currentTool = req.params.toolid;
           res.render("toolinfo.jade", {
             keys: keys,
+            toolname: req.session.currentTool,
             values: jsonBody,
             csrf: req.session.csrfCookie
           });
@@ -513,7 +526,7 @@ app.post('/getreport', function(req, res) {
           var currScanId = array[i];
           if (currScanId <= 0 || !validator.isNumeric(currScanId)) {
             console.log("Invalid scan ID: " + currScanId);
-            array.splice(i,1);
+            array.splice(i, 1);
             --pendingCB; // one less call back with report expected
           }
         } // determine the number of valid scan IDs
@@ -526,7 +539,7 @@ app.post('/getreport', function(req, res) {
           var options = {
               url: "http://" + config.serverIP + ":" + config.serverPort + "/getreport/" + encodeURIComponent(req.session.userName) + "/" + encodeURIComponent(currScanId),
               method: "GET"
-            } // options// options
+            } // options
 
           // for each scan id, request the report
 
@@ -570,7 +583,9 @@ app.post('/getreport', function(req, res) {
               //console.log(multi_htmlreport);
               var reportfilenamepdf = "./" + req.session.userName + "_report_multi.pdf";
               // Now we create a single PDF file
-              var options = { format: 'Letter'};
+              var options = {
+                format: 'Letter'
+              };
               pdf.create(multi_htmlreport, options).toFile(reportfilenamepdf,
                 function(error, success) {
                   if (error) {
@@ -579,11 +594,11 @@ app.post('/getreport', function(req, res) {
                   } else {
                     //console.log(reportfilenamepdf);
                     //res.send(multi_htmlreport);
-                    res.sendFile(path.join(__dirname,'/') + reportfilenamepdf);
+                    res.sendFile(path.join(__dirname, '/') + reportfilenamepdf);
                     // ideally we should delete the temp.html and report_multi.pdf
                   }
                 });
-                //res.send(multi_htmlreport);
+              //res.send(multi_htmlreport);
             } // if pendingCB == 0
           }); // report request
         } // for each scanid in the list requesting the report
@@ -624,8 +639,27 @@ var createHTMLstring = function(jsonData) {
 
 app.get('/tools', function(req, res) {
   if (req.session.userAuth == true) {
-    res.render("tools.jade", {
-      csrf: req.session.csrfCookie
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getTools/",
+      method: "GET"
+    }
+    request(options, function(error, response, body) {
+      //console.log("All Tool List :" + body);
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        var toolList = JSON.parse(body).data;
+        var toolgroup = JSON.parse(body).toolgroup;
+        //	console.log("Parse data : " + summaryData);
+        res.render("tools.jade", {
+          toolslist: toolList,
+          toolgroup: toolgroup,
+          csrf: req.session.csrfCookie
+        });
+      }
     });
   } else {
     res.redirect('/');
@@ -730,6 +764,7 @@ app.post('/tooltoclient', function(req, res) {
   var pendingCB = -1;
   var requestCount = 0;
   var errormsg;
+  var ToolGroupName = "";
   if (req.session.userAuth == true) {
     var csrfBodyToken = req.body.csrf;
     var cookieArray = req.headers.cookie.split(";");
@@ -752,72 +787,149 @@ app.post('/tooltoclient', function(req, res) {
       if (clientList == "all") {
         clientList = req.session.userClients;
       }
+      // validate client ids from the list and count valid clients ###############################################
+
 
       var array = clientList.toString().split(",");
-      var numIds = array.length;
-      console.log("Multiple client id detected");
+      var numclientIds = array.length;
+      var numValidclientIds = numclientIds;
 
-      requestCount = 0; // number of requests made to server - increment when making requests`
-      for (pendingCB = numIds, i = 0; i < numIds; i++) {
+
+      for (i = 0; i < numclientIds; i++) {
         // validate scan id
         var clientid = array[i];
-        if (clientid <= 0 || !validator.isNumeric(clientid)) {
+        if ((!validator.isNumeric(clientid)) || (clientid <= 0)) {
           console.log("Invalid client ID: " + clientid);
-          array.splice(i,1);
-          --pendingCB; // one less call back with report expected
+          array.splice(i, 1);
+          --numValidclientIds; // one less call back with report expected
         }
       } // determine the number of valid scan IDs
-      if (!validator.isAlphanumeric(toolid)) {
-        res.send("Invalid toolID - no tool to push");
-      }
-      errormsg = "";
+      console.log("Number of Valid launchers : " + numValidclientIds);
+      /* For toolid is more than one */
 
-      for (i = 0; i < numIds; i++) { //index is one less, so i<numScanIds
+      // validate tool ids from the list and count valid tools  ###############################################
+      var numToolid = 1;
+      var numValidToolid = 1;
+      var arraytoolid = toolid;
+      if (validator.contains(toolid, '/')) {
+        var data = toolid.toString().split("/");
+        console.log("Data of toolGroup: " + data);
+        var ToolGroupName = data[0];
+        var toolid = data[1];
+
+        console.log("ToolGroupNAme in upload :" + ToolGroupName);
+      } // if close
+
+      var arraytoolid = toolid.toString().split(",");
+      var numToolid = arraytoolid.length;
+      var numValidToolid = numToolid;
+
+
+      console.log("Tools for in toolGroup:" + toolid);
+
+      for (i = 0; i < numToolid; i++) {
         // validate scan id
-        var clientid = array[i];
-        var body = {
-          "clientID": clientid,
-          "toolID": toolid
-        };
-
-        var headers = {
-          'Content-Type': 'application/json'
+        var toolid = arraytoolid[i];
+        if (!validator.isAlphanumeric(toolid)) {
+          console.log("Invalid Tool ID: " + toolid);
+          arraytoolid.splice(i, 1);
+          --numValidToolid; // one less call back with report expected
         }
-        var options = {
-          url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/pushtoolclient/",
-          headers: headers,
-          method: "POST",
-          body: JSON.stringify(body)
-        }
+      } // determine the number of valid scan IDs
+      console.log("Number of Valid Toolids : " + numValidToolid);
 
-        ++requestCount;
 
-        request(options, function(error, response, body) {
+      pendingCB = numValidclientIds * numValidToolid; // Making this many request and expecting so many call backs
+      if (pendingCB <= 0) {
+        res.send("No valid clients or no valid tool ids: Nothing to do");
+      } else {
+        errormsg = "";
 
-          --pendingCB;
-          console.log("One more call back done to push tool to client : " + pendingCB + "still to go");
+        for (var j = 0; j < numToolid; j++) { // index is one less so i< numToolid 
+          var toolid = arraytoolid[j];
+          if (!validator.isAlphanumeric(toolid)) {
+            continue;
+          } // else pick next tool
 
-          if (error || (body == "error")) {
-            console.log("ERROR :" + error);
-            errormsg = errormsg + ":ERROR:" + error;
-            console.log("Some call back error:" + errormsg);
-            //res.send("Some error occured");
-          } else {
-            if (pendingCB == 0) {
-              console.log("Tool push to all clients done ");
+          for (var i = 0; i < numclientIds; i++) { //index is one less, so i<numScanIds
+            // validate client id
+            var clientid = array[i];
+            if ((!validator.isNumeric(clientid)) || (clientid <= 0)) {
+              continue;
+            } // else pick next client
 
-              var toolList = JSON.parse(body).toolList;
-              res.render("pushstatus.jade", {
-                csrf: req.session.csrfCookie
-              });
+            // Push this tool to this client 
+
+            var body = {
+              "clientID": clientid,
+              "toolID": toolid
+            };
+
+            var headers = {
+              'Content-Type': 'application/json'
             }
-          }
+            var options = {
+              url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/pushtoolclient/",
+              headers: headers,
+              method: "POST",
+              body: JSON.stringify(body)
+            }
 
-          if (requestCount == 0) {
-            res.send("Invalid Client ID(s) - no tool to push");
-          }
+            request(options, function(error, response, body) {
+              --pendingCB;
+              console.log("One more call back done to push tool to client : " + pendingCB + "still to go");
 
-        });
+              if (error || (body == "error")) {
+                console.log("ERROR :" + error);
+                errormsg = errormsg + ":ERROR:" + error;
+                console.log("Some call back error:" + errormsg);
+                //res.send("Some error occured");
+              } else {
+                if (pendingCB == 0) {
+                  if (ToolGroupName != "") {
+                    console.log("Toolgroup push to all clients done ");
+                    var body = {
+                      "clientList": clientList.toString(),
+                      "ToolGroupName": ToolGroupName
+                    };
+
+                    var headers = {
+                      'Content-Type': 'application/json'
+                    }
+                    var options = {
+                      url: "http://" + config.serverIP + ":" + config.serverPort + "/admin/pushclienttoolGroup/",
+                      headers: headers,
+                      method: "POST",
+                      body: JSON.stringify(body)
+                    }
+                    request(options, function(error, response, body) {
+                      //console.log("All Tool List :" + body);
+                      if (error) {
+                        console.log(error);
+                        res.send("Some error occured");
+                      } else if (body == "error") {
+                        res.send("Some error occured on client");
+                      } else {
+                        res.render("pushstatus.jade", {
+                          csrf: req.session.csrfCookie
+                        });
+                      }
+                    });
+
+                  } else {
+
+                    console.log("Tool push to client(s) done ");
+                    res.render("pushstatus.jade", {
+                      csrf: req.session.csrfCookie
+                    });
+                  }
+
+                } // All requests completed
+              } // if error/else completed
+
+            }); // request completed
+          } // numclientid for  loop completed
+        } // for toolid for loop completed
       }
     } else {
       res.send("Invalid CSRF token");
@@ -827,10 +939,26 @@ app.post('/tooltoclient', function(req, res) {
   }
 });
 
-app.get('/settings', function(req, res) {
+app.get('/settings', function(req, res) { // praveen changes for username popup
   if (req.session.userAuth == true) {
-    res.render("settings.jade", {
-      csrf: req.session.csrfCookie
+    var userOpt = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getallusers",
+      method: "GET"
+    }
+    request(userOpt, function(error, userRes, userBody) {
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (userBody == "error") {
+        res.send("Some error occured on client");
+      } else {
+        console.log(userBody);
+        var userList = JSON.parse(userBody).userList;
+        res.render("settings.jade", {
+          userid: userList,
+          csrf: req.session.csrfCookie
+        });
+      }
     });
   } else {
     res.redirect('/');
@@ -1046,7 +1174,7 @@ app.get('/summary', function(req, res) {
       method: "GET"
     }
     request(options, function(error, response, body) {
-//     console.log("User is :" + req.session.userName);
+      // console.log("All body Summary UI :" + body);
       if (error) {
         console.log(error);
         res.send("Some error occured");
@@ -1065,6 +1193,137 @@ app.get('/summary', function(req, res) {
     res.redirect('/');
   }
 });
+
+
+app.get('/custom', function(req, res) {
+  if (req.session.userAuth == true) {
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getTools/",
+      method: "GET"
+    }
+    request(options, function(error, response, body) {
+      //console.log("All Tool List :" + body);
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        var toolList = JSON.parse(body).data;
+        //	console.log("Parse data : " + summaryData);
+        res.render("custom.jade", {
+          toolslist: toolList,
+          csrf: req.session.csrfCookie
+        });
+      }
+    });
+  } else {
+    res.redirect('/');
+  }
+});
+
+app.post('/createGroup', function(req, res) {
+  var ToolGroupName = req.body.ToolGroupName;
+  var toolnameList = req.body.toolID;
+  // console.log("Data from UI :" + ToolGroupName + "Tools :" + toolnameList);
+  var headers = {
+    'Content-Type': 'application/json'
+  }
+  var options = {
+    url: "http://" + config.serverIP + ":" + config.serverPort + "/createToolGroup/",
+    headers: headers,
+    method: "POST",
+    form: {
+      'ToolGroupName': ToolGroupName,
+      'toolnameList': toolnameList.toString()
+    }
+  }
+
+  request(options, function(error, response, body) {
+    if (error) {
+      req.session.userAuth = false;
+      res.redirect('/');
+      console.log(error);
+    } else if (body == "error") {
+      res.send("Some error occured on client");
+    } else {
+      res.send("Tool Group Created Successfully !!!");
+    }
+  });
+
+});
+
+app.get('/gettoolgroup/:groupname', function(req, res) {
+  //  if (req.session.userAuth == true) {
+  var toolgroupname = req.params.groupname;
+  // console.log("Tool Group Name : " + toolgroupname); 
+  // res.render("toolgroupconfigure.jade");
+  if (req.session.userAuth == true) {
+
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/gettoolgroup/" + encodeURIComponent(toolgroupname),
+      method: "GET",
+    }
+    request(options, function(error, response, body) {
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        // console.log("Tool list in body :" + body );
+        var toolList = body.toString().split(",");
+
+        // console.log("Tool list is :" + toolList );
+        res.render("toollistGroup.jade", {
+          tools: toolList,
+          toolgroupname: toolgroupname,
+          csrf: req.session.csrfCookie
+        });
+      }
+    });
+
+  } else {
+    res.redirect('/');
+  }
+});
+app.get('/toolgroupconfigure', function(req, res) {
+  if (req.session.userAuth == true) {
+    res.render("toolgroupconfigure.jade", {
+      csrf: req.session.csrfCookie
+    });
+  } else {
+    res.redirect('/');
+  }
+});
+
+app.get('/pushtoolgroup', function(req, res) {
+  if (req.session.userAuth == true) {
+    var options = {
+      url: "http://" + config.serverIP + ":" + config.serverPort + "/getalltoolGroup/",
+      method: "GET"
+    }
+    request(options, function(error, response, body) {
+      // console.log("toolgroup select:" + body);
+      if (error) {
+        console.log(error);
+        res.send("Some error occured");
+      } else if (body == "error") {
+        res.send("Some error occured on client");
+      } else {
+        var toolList = JSON.parse(body);
+        res.render("toolGroupselect.jade", {
+          clientid: req.session.userClients,
+          toollist: toolList,
+          csrf: req.session.csrfCookie
+        });
+      }
+    });
+  } else {
+    res.redirect('/');
+  }
+});
+
 
 http.createServer(app).listen(app.get('port'), function(req, res) {
   console.log('Listing to port ' + config.port);

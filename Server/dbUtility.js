@@ -359,13 +359,13 @@ var closuregetpasswordHash = function(username, callback, db) {
     collection.find({
       "username": username
     }, function(error, cursor) {
-	if (error) {
-          db.close();
-          callback("error");
-        }
+      if (error) {
+        db.close();
+        callback("error");
+      }
       cursor.toArray(function(errorarray, data) {
         if (data[0] == undefined) {
-           data = "error";
+          data = "error";
           db.close();
           callback("error");
         } else {
@@ -405,6 +405,180 @@ var closuregetUserClientMapping = function(username, callback, db) {
           });
         }
       });
+    });
+  });
+}
+
+/*
+ * used by /getserverTools
+ */
+var getserverTools = function(callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closuregetserverTools(callback, db);
+  });
+}
+
+var closuregetserverTools = function(callback, db) {
+  db.collection("toolData", function(error, collection) {
+    collection.find(function(error, cursor) {
+      cursor.toArray(function(errorarray, data) {
+        var toolData = [];
+        for (var i = 0; i < data.length; i++) {
+          toolData.push({
+            "toolID": data[i].toolID
+          });
+        }
+        if (error) {
+          db.close();
+          callback("error");
+        } else {
+          db.close();
+          callback(toolData);
+        }
+      });
+    });
+  });
+}
+
+/*
+ * used by /createToolGroup/ Server
+ */
+var createTGN = function(toolgroupname, toollist, callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closurecreateTGN(toolgroupname, toollist, callback, db);
+  });
+}
+
+var closurecreateTGN = function(toolgroupname, toollist, callback, db) {
+  var toolData = {
+    "ToolGroupName": toolgroupname,
+    "toolList": toollist,
+
+  };
+  db.collection("toolGroupData", function(error, collection) {
+    collection.insert(toolData, function(err, inserted) {
+      if (err) {
+        db.close();
+        console.log("Some error occured in db report entry");
+        callback("error");
+      } else {
+        db.close();
+        console.log("db report Inserted successfully");
+        callback("ok");
+      }
+    });
+  });
+}
+
+/*
+ * used by /getToolGroup
+ */
+var getToolGroup = function(callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closuregetToolGroup(callback, db);
+  });
+}
+
+var closuregetToolGroup = function(callback, db) {
+  db.collection("toolGroupData", function(error, collection) {
+    collection.find(function(error, cursor) {
+      cursor.toArray(function(errorarray, data) {
+        var toolGroup = [];
+        for (var i = 0; i < data.length; i++) {
+          toolGroup.push({
+            "toolGroupName": data[i].ToolGroupName,
+            "toolList": data[i].toolList
+          });
+        }
+        if (error) {
+          db.close();
+          callback("error");
+        } else {
+          db.close();
+          callback(toolGroup);
+        }
+      });
+    });
+  });
+}
+
+/*
+ * used by /gettoolgroupname
+ */
+
+var gettoolgroupname = function(toolgroupname, callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closuregettoolgroupname(toolgroupname, callback, db);
+  });
+}
+
+var closuregettoolgroupname = function(toolgroupname, callback, db) {
+    db.collection("toolGroupData", function(error, collection) {
+      collection.find({
+        "ToolGroupName": toolgroupname
+      }, function(error, cursor) {
+        cursor.toArray(function(errorarray, data) {
+          //    console.log("DAta in db toolList:" + data);
+          var toolGroup = [];
+          for (var i = 0; i < data.length; i++) {
+            toolGroup.push({
+              //      "toolGroupName": data[i].ToolGroupName,
+              "toolList": data[i].toolList,
+              //    "clientList":data[i].clientList       
+            });
+          }
+          if (error) {
+            db.close();
+            callback("error");
+          } else {
+            db.close();
+            callback(data[0].toolList);
+          }
+        });
+      });
+    });
+  }
+  /*
+   * used by /addClientlistGroup
+   */
+var addClientlistGroup = function(ToolGroupName, clientList, callback) {
+  var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
+    safe: true
+  });
+  db.open(function(error) {
+    closureaddClientlistGroup(ToolGroupName, clientList, callback, db);
+  });
+}
+
+var closureaddClientlistGroup = function(ToolGroupName, clientList, callback, db) {
+  db.collection("toolGroupData", function(error, collection) {
+    collection.update({
+      "ToolGroupName": ToolGroupName
+    }, {
+      $set: {
+        "clientList": clientList
+      }
+    }, function(err, inserted) {
+      if (err) {
+        db.close();
+        console.log("Some error occured");
+        callback(false);
+      } else {
+        db.close();
+        callback(true);
+      }
     });
   });
 }
@@ -485,7 +659,6 @@ var closureupdateToolVersion = function(toolData, callback, db) {
           console.log("db tool Inserted successfully");
           callback("ok");
         }
-
       });
   });
 }
@@ -991,7 +1164,9 @@ var isUser = function(username, callback) {
 
 var closureisUser = function(username, callback, db) {
   db.collection("credentials", function(error, collection) {
-    collection.find({"username":username}, function(error, cursor) {
+    collection.find({
+      "username": username
+    }, function(error, cursor) {
       cursor.toArray(function(errorarray, data) {
         if (data[0] == undefined) {
           db.close();
@@ -1005,6 +1180,9 @@ var closureisUser = function(username, callback, db) {
   });
 }
 
+/*
+ * used by /getsummary/:username
+ */
 var getallsummary = function(username, callback) {
   var db = new mongo.Db("secToolController", new mongo.Server(host, port, {}), {
     safe: true
@@ -1083,16 +1261,16 @@ var closureinsertscanID = function(scanID, username, callback, db) {
   var ID = scanID.toString();
   var reportData = {
     "scanID": ID,
-    "toolNPM": 'Dummy',
-    "toolName": 'Dummy',
+    "toolNPM": 'Waiting..',
+    "toolName": 'Waiting..',
     "user": username,
     "date": currDate,
     "data": [{
-      "input": 'Dummy',
-      "output": 'Dummy',
-      "message": 'Dummy'
+      "input": 'Waiting..',
+      "output": 'Waiting..',
+      "message": 'Waiting..'
     }],
-    "clientID": 'Dummy'
+    "clientID": 'Waiting..'
   };
   db.collection("toolReporting", function(error, collection) {
     collection.insert(reportData, function(err, inserted) {
@@ -1108,7 +1286,6 @@ var closureinsertscanID = function(scanID, username, callback, db) {
     });
   });
 }
-
 exports.performHeartBeat = performHeartBeat;
 exports.insertClientIDIntoDB = insertClientIDIntoDB;
 exports.getclientStatusData = getclientStatusData;
@@ -1140,4 +1317,9 @@ exports.getAllToolsVersion = getAllToolsVersion;
 exports.updateToolVersion = updateToolVersion;
 exports.isUser = isUser;
 exports.getallsummary = getallsummary;
+exports.getserverTools = getserverTools;
+exports.createTGN = createTGN;
+exports.getToolGroup = getToolGroup;
+exports.gettoolgroupname = gettoolgroupname;
+exports.addClientlistGroup = addClientlistGroup;
 exports.insertscanID = insertscanID;
