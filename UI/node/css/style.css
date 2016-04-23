@@ -34,7 +34,7 @@ fieldset {
 input {
   border: none;
   font-family: inherit;
-  font-size: inherit;
+  font-size: 12px;
   margin: 0;
   -webkit-appearance: none;
 }
@@ -388,6 +388,7 @@ input[type="submit"] {
 
 
 #tool td {
+  font-size: 16px;
   text-align: center;
   padding: 6px;
 }
@@ -407,6 +408,7 @@ input[type="submit"] {
   border-radius: 3px;
   color: #fff;
   font-weight: bold;
+  font-size: 12px;
   margin-top: 20px;
   padding: 12px 20px;
   width: 40%

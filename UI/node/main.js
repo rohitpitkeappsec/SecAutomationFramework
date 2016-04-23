@@ -616,7 +616,7 @@ app.post('/getreport', function(req, res) {
 
 var createHTMLstring = function(jsonData) {
   completeBody = "";
-  completeBody = completeBody + "<h1 style='text-align:center'>" + jsonData.metadata.reportname + " </h1>";
+  completeBody = completeBody + "<h2 style='text-align:center'>" + jsonData.metadata.reportname + " </h2>";//change
   completeBody = completeBody + "Scan ID : " + jsonData.metadata.scanid + "</br>";
   completeBody = completeBody + "Target host : " + jsonData.metadata.target + "</br></br>";
   var tableBody = "";
@@ -629,7 +629,7 @@ var createHTMLstring = function(jsonData) {
     }
     tableBody = tableBody + "</tr>"
   }
-  completeBody = completeBody + "<table style='width:60%; font-size:13px'>" + tableBody + "</table>" + "<br> <br>";
+  completeBody = completeBody + "<table style='width:60%; font-size:8px'>" + tableBody + "</table>" + "<br> <br>";//change
 
   //  completeBody = "<body>" + completeBody + "</body>";
   //  completeBody = "<html>" + completeBody + "</html>";

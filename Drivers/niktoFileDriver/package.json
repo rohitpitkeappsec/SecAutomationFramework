@@ -1,0 +1,11 @@
+{
+  "name": "niktoFileDriver",
+  "version": "0.0.0",
+  "description": "Nikto File Vulnerabiliy Detection Driver",
+  "main": "niktoFileDriver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Praveen Sutar",
+  "license": "BSD-2-Clause"
+}

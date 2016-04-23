@@ -30,7 +30,7 @@ html
                  tr
                   td #{item.toolID}
           span
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           table(style='display:inline')
             thead
               tr
@@ -44,7 +44,7 @@ html
                     else
                       a(href="/gettools/" + item) #{item}
           span
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           table(style='display:inline')
             thead
               th Tool Group 
@@ -53,7 +53,9 @@ html
                  tr
                   td 
                     a(href="/gettoolgroup/#{item.toolGroupName}") #{item.toolGroupName}
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          a(href="/custom") >> Create ToolGroup       
+               tr
+                td 
+                  a(style={color: 'red'} href="/custom") Create Tool Group
+          | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       // end login-form
  

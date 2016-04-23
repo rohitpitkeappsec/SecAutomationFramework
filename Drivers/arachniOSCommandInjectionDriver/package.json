@@ -1,0 +1,11 @@
+{
+  "name": "arachniOSCommandInjectionDriver",
+  "version": "0.0.0",
+  "description": "Arachni OS Command Injection Driver",
+  "main": "arachniOSCommandInjectionDriver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Praveen Sutar",
+  "license": "BSD-2-Clause"
+}

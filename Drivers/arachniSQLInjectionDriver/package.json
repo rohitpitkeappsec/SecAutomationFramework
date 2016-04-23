@@ -1,0 +1,11 @@
+{
+  "name": "arachniSQLInjectionDriver",
+  "version": "0.0.0",
+  "description": "Arachni XSS Detection Driver",
+  "main": "arachniSQLInjectionDriver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Praveen Sutar",
+  "license": "BSD-2-Clause"
+}
